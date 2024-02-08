@@ -1,0 +1,41 @@
+[
+    {
+        "branches": [
+            {
+                "type": "variable",
+                "var_name": "c",
+                "save": {
+                    "c0": {
+                        "type": "cc",
+                        "save": {
+                            "c0": { "type": "register", "index": 0 },
+                            "c1": { "type": "register", "index": 1 },
+                            "c2": { "type": "register", "index": 2 }
+                        }
+                    },
+                    "c2": {
+                        "type": "variable",
+                        "var_name": "c2",
+                        "save": {
+                            "c0": {
+                                "type": "cc",
+                                "save": {
+                                    "c0": { "type": "register", "index": 0 },
+                                    "c1": { "type": "register", "index": 1 },
+                                    "c2": { "type": "register", "index": 2 }
+                                }
+                            },
+                            "c2": { "type": "register", "index": 2 }
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "branches": [
+            { "type": "register", "index": 0 }
+        ],
+        "nobranch": true
+    }
+]
