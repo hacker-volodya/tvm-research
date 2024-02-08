@@ -1,0 +1,540 @@
+// stackops
+
+cp0.insert(OpcodeInstr::mksimple(0x00, 8, "NOP", exec_nop))
+      .insert(OpcodeInstr::mksimple(0x01, 8, "SWAP", exec_swap))
+      .insert(OpcodeInstr::mkfixedrange(0x02, 0x10, 8, 4, instr::dump_1sr("XCHG "), exec_xchg0))
+      .insert(OpcodeInstr::mkfixed(0x10, 8, 8, dump_xchg, exec_xchg))
+      .insert(OpcodeInstr::mkfixed(0x11, 8, 8, instr::dump_1sr_l("XCHG "), exec_xchg0_l))
+      .insert(OpcodeInstr::mkfixedrange(0x12, 0x20, 8, 4, instr::dump_1sr("XCHG s1,"), exec_xchg1))
+      .insert(OpcodeInstr::mksimple(0x20, 8, "DUP", exec_dup))
+      .insert(OpcodeInstr::mksimple(0x21, 8, "OVER", exec_over))
+      .insert(OpcodeInstr::mkfixedrange(0x22, 0x30, 8, 4, instr::dump_1sr("PUSH "), exec_push))
+      .insert(OpcodeInstr::mksimple(0x30, 8, "DROP", exec_drop))
+      .insert(OpcodeInstr::mksimple(0x31, 8, "NIP", exec_nip))
+      .insert(OpcodeInstr::mkfixedrange(0x32, 0x40, 8, 4, instr::dump_1sr("POP "), exec_pop))
+      .insert(OpcodeInstr::mkfixed(0x4, 4, 12, instr::dump_3sr("XCHG3 "), exec_xchg3))
+      .insert(OpcodeInstr::mkfixed(0x50, 8, 8, instr::dump_2sr("XCHG2 "), exec_xchg2))
+      .insert(OpcodeInstr::mkfixed(0x51, 8, 8, instr::dump_2sr("XCPU "), exec_xcpu))
+      .insert(OpcodeInstr::mkfixed(0x52, 8, 8, instr::dump_2sr_adj(1, "PUXC "), exec_puxc))
+      .insert(OpcodeInstr::mkfixed(0x53, 8, 8, instr::dump_2sr("PUSH2 "), exec_push2))
+      .insert(OpcodeInstr::mkfixed(0x540, 12, 12, instr::dump_3sr("XCHG3 "), exec_xchg3))
+      .insert(OpcodeInstr::mkfixed(0x541, 12, 12, instr::dump_3sr("XC2PU "), exec_xc2pu))
+      .insert(OpcodeInstr::mkfixed(0x542, 12, 12, instr::dump_3sr_adj(1, "XCPUXC "), exec_xcpuxc))
+      .insert(OpcodeInstr::mkfixed(0x543, 12, 12, instr::dump_3sr("XCPU2 "), exec_xcpu2))
+      .insert(OpcodeInstr::mkfixed(0x544, 12, 12, instr::dump_3sr_adj(0x11, "PUXC2 "), exec_puxc2))
+      .insert(OpcodeInstr::mkfixed(0x545, 12, 12, instr::dump_3sr_adj(0x11, "PUXCPU "), exec_puxcpu))
+      .insert(OpcodeInstr::mkfixed(0x546, 12, 12, instr::dump_3sr_adj(0x12, "PU2XC "), exec_pu2xc))
+      .insert(OpcodeInstr::mkfixed(0x547, 12, 12, instr::dump_3sr("PUSH3 "), exec_push3))
+      .insert(OpcodeInstr::mkfixed(0x55, 8, 8, instr::dump_2c_add(0x11, "BLKSWAP ", ","), exec_blkswap))
+      .insert(OpcodeInstr::mkfixed(0x56, 8, 8, instr::dump_1sr_l("PUSH "), exec_push_l))
+      .insert(OpcodeInstr::mkfixed(0x57, 8, 8, instr::dump_1sr_l("POP "), exec_pop_l))
+      .insert(OpcodeInstr::mksimple(0x58, 8, "ROT", exec_rot))
+      .insert(OpcodeInstr::mksimple(0x59, 8, "ROTREV", exec_rotrev))
+      .insert(OpcodeInstr::mksimple(0x5a, 8, "2SWAP", exec_2swap))
+      .insert(OpcodeInstr::mksimple(0x5b, 8, "2DROP", exec_2drop))
+      .insert(OpcodeInstr::mksimple(0x5c, 8, "2DUP", exec_2dup))
+      .insert(OpcodeInstr::mksimple(0x5d, 8, "2OVER", exec_2over))
+      .insert(OpcodeInstr::mkfixed(0x5e, 8, 8, instr::dump_2c_add(0x20, "REVERSE ", ","), exec_reverse))
+      .insert(OpcodeInstr::mkfixed(0x5f0, 12, 4, instr::dump_1c("BLKDROP "), exec_blkdrop))
+      .insert(OpcodeInstr::mkfixedrange(0x5f10, 0x6000, 16, 8, instr::dump_2c("BLKPUSH ", ","), exec_blkpush))
+      .insert(OpcodeInstr::mksimple(0x60, 8, "PICK", exec_pick))
+      .insert(OpcodeInstr::mksimple(0x61, 8, "ROLL", exec_roll))
+      .insert(OpcodeInstr::mksimple(0x62, 8, "ROLLREV", exec_rollrev))
+      .insert(OpcodeInstr::mksimple(0x63, 8, "BLKSWX", exec_blkswap_x))
+      .insert(OpcodeInstr::mksimple(0x64, 8, "REVX", exec_reverse_x))
+      .insert(OpcodeInstr::mksimple(0x65, 8, "DROPX", exec_drop_x))
+      .insert(OpcodeInstr::mksimple(0x66, 8, "TUCK", exec_tuck))
+      .insert(OpcodeInstr::mksimple(0x67, 8, "XCHGX", exec_xchg_x))
+      .insert(OpcodeInstr::mksimple(0x68, 8, "DEPTH", exec_depth))
+      .insert(OpcodeInstr::mksimple(0x69, 8, "CHKDEPTH", exec_chkdepth))
+      .insert(OpcodeInstr::mksimple(0x6a, 8, "ONLYTOPX", exec_onlytop_x))
+      .insert(OpcodeInstr::mksimple(0x6b, 8, "ONLYX", exec_only_x))
+      .insert(OpcodeInstr::mkfixedrange(0x6c10, 0x6d00, 16, 8, instr::dump_2c("BLKDROP2 ", ","), exec_blkdrop2));
+
+// tupleops
+
+cp0.insert(OpcodeInstr::mksimple(0x6d, 8, "PUSHNULL", exec_push_null))
+      .insert(OpcodeInstr::mksimple(0x6e, 8, "ISNULL", exec_is_null))
+      .insert(OpcodeInstr::mkfixed(0x6f0, 12, 4, instr::dump_1c("TUPLE "), exec_mktuple))
+      .insert(OpcodeInstr::mkfixed(0x6f1, 12, 4, instr::dump_1c("INDEX "), exec_tuple_index))
+      .insert(OpcodeInstr::mkfixed(0x6f2, 12, 4, instr::dump_1c("UNTUPLE "), exec_untuple))
+      .insert(OpcodeInstr::mkfixed(0x6f3, 12, 4, instr::dump_1c("UNPACKFIRST "), exec_untuple_first))
+      .insert(OpcodeInstr::mkfixed(0x6f4, 12, 4, instr::dump_1c("EXPLODE "), exec_explode_tuple))
+      .insert(OpcodeInstr::mkfixed(0x6f5, 12, 4, instr::dump_1c("SETINDEX "), exec_tuple_set_index))
+      .insert(OpcodeInstr::mkfixed(0x6f6, 12, 4, instr::dump_1c("INDEXQ "), exec_tuple_quiet_index))
+      .insert(OpcodeInstr::mkfixed(0x6f7, 12, 4, instr::dump_1c("SETINDEXQ "), exec_tuple_quiet_set_index))
+      .insert(OpcodeInstr::mksimple(0x6f80, 16, "TUPLEVAR", exec_mktuple_var))
+      .insert(OpcodeInstr::mksimple(0x6f81, 16, "INDEXVAR", exec_tuple_index_var))
+      .insert(OpcodeInstr::mksimple(0x6f82, 16, "UNTUPLEVAR", exec_untuple_var))
+      .insert(OpcodeInstr::mksimple(0x6f83, 16, "UNPACKFIRSTVAR", exec_untuple_first_var))
+      .insert(OpcodeInstr::mksimple(0x6f84, 16, "EXPLODEVAR", exec_explode_tuple_var))
+      .insert(OpcodeInstr::mksimple(0x6f85, 16, "SETINDEXVAR", exec_tuple_set_index_var))
+      .insert(OpcodeInstr::mksimple(0x6f86, 16, "INDEXVARQ", exec_tuple_quiet_index_var))
+      .insert(OpcodeInstr::mksimple(0x6f87, 16, "SETINDEXVARQ", exec_tuple_quiet_set_index_var))
+      .insert(OpcodeInstr::mksimple(0x6f88, 16, "TLEN", exec_tuple_length))
+      .insert(OpcodeInstr::mksimple(0x6f89, 16, "QTLEN", exec_tuple_length_quiet))
+      .insert(OpcodeInstr::mksimple(0x6f8a, 16, "ISTUPLE", exec_is_tuple))
+      .insert(OpcodeInstr::mksimple(0x6f8b, 16, "LAST", exec_tuple_last))
+      .insert(OpcodeInstr::mksimple(0x6f8c, 16, "TPUSH", exec_tuple_push))
+      .insert(OpcodeInstr::mksimple(0x6f8d, 16, "TPOP", exec_tuple_pop))
+      .insert(OpcodeInstr::mksimple(0x6fa0, 16, "NULLSWAPIF", std::bind(exec_null_swap_if, _1, true, 0)))
+      .insert(OpcodeInstr::mksimple(0x6fa1, 16, "NULLSWAPIFNOT", std::bind(exec_null_swap_if, _1, false, 0)))
+      .insert(OpcodeInstr::mksimple(0x6fa2, 16, "NULLROTRIF", std::bind(exec_null_swap_if, _1, true, 1)))
+      .insert(OpcodeInstr::mksimple(0x6fa3, 16, "NULLROTRIFNOT", std::bind(exec_null_swap_if, _1, false, 1)))
+      .insert(OpcodeInstr::mksimple(0x6fa4, 16, "NULLSWAPIF2", std::bind(exec_null_swap_if_many, _1, true, 0, 2)))
+      .insert(OpcodeInstr::mksimple(0x6fa5, 16, "NULLSWAPIFNOT2", std::bind(exec_null_swap_if_many, _1, false, 0, 2)))
+      .insert(OpcodeInstr::mksimple(0x6fa6, 16, "NULLROTRIF2", std::bind(exec_null_swap_if_many, _1, true, 1, 2)))
+      .insert(OpcodeInstr::mksimple(0x6fa7, 16, "NULLROTRIFNOT2", std::bind(exec_null_swap_if_many, _1, false, 1, 2)))
+      .insert(OpcodeInstr::mkfixed(0x6fb, 12, 4, dump_tuple_index2, exec_tuple_index2))
+      .insert(OpcodeInstr::mkfixed(0x6fc >> 2, 10, 6, dump_tuple_index3, exec_tuple_index3));
+
+// arithops
+
+cp0.insert(OpcodeInstr::mkfixed(0x7, 4, 4, dump_push_tinyint4, exec_push_tinyint4))
+      .insert(OpcodeInstr::mkfixed(0x80, 8, 8, std::bind(dump_op_tinyint8, "PUSHINT ", _1, _2), exec_push_tinyint8))
+      .insert(OpcodeInstr::mkfixed(0x81, 8, 16, dump_push_smallint, exec_push_smallint))
+      .insert(OpcodeInstr::mkextrange(0x82 << 5, (0x82 << 5) + 31, 13, 5, dump_push_int, exec_push_int,
+                                      compute_len_push_int))
+      .insert(OpcodeInstr::mkfixedrange(0x8300, 0x83ff, 16, 8, instr::dump_1c_l_add(1, "PUSHPOW2 "), exec_push_pow2))
+      .insert(OpcodeInstr::mksimple(0x83ff, 16, "PUSHNAN", exec_push_nan))
+      .insert(OpcodeInstr::mkfixed(0x84, 8, 8, instr::dump_1c_l_add(1, "PUSHPOW2DEC "), exec_push_pow2dec))
+      .insert(OpcodeInstr::mkfixed(0x85, 8, 8, instr::dump_1c_l_add(1, "PUSHNEGPOW2 "), exec_push_negpow2));
+
+      cp0.insert(OpcodeInstr::mksimple(0xa0, 8, "ADD", std::bind(exec_add, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xa1, 8, "SUB", std::bind(exec_sub, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xa2, 8, "SUBR", std::bind(exec_subr, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xa3, 8, "NEGATE", std::bind(exec_negate, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xa4, 8, "INC", std::bind(exec_inc, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xa5, 8, "DEC", std::bind(exec_dec, _1, false)))
+      .insert(OpcodeInstr::mkfixed(0xa6, 8, 8, std::bind(dump_op_tinyint8, "ADDINT ", _1, _2),
+                                   std::bind(exec_add_tinyint8, _1, _2, false)))
+      .insert(OpcodeInstr::mkfixed(0xa7, 8, 8, std::bind(dump_op_tinyint8, "MULINT ", _1, _2),
+                                   std::bind(exec_mul_tinyint8, _1, _2, false)))
+      .insert(OpcodeInstr::mksimple(0xa8, 8, "MUL", std::bind(exec_mul, _1, false)));
+
+cp0.insert(OpcodeInstr::mksimple(0xb7a0, 16, "QADD", std::bind(exec_add, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xb7a1, 16, "QSUB", std::bind(exec_sub, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xb7a2, 16, "QSUBR", std::bind(exec_subr, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xb7a3, 16, "QNEGATE", std::bind(exec_negate, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xb7a4, 16, "QINC", std::bind(exec_inc, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xb7a5, 16, "QDEC", std::bind(exec_dec, _1, true)))
+      .insert(OpcodeInstr::mkfixed(0xb7a6, 16, 8, std::bind(dump_op_tinyint8, "QADDINT ", _1, _2),
+                                   std::bind(exec_add_tinyint8, _1, _2, true)))
+      .insert(OpcodeInstr::mkfixed(0xb7a7, 16, 8, std::bind(dump_op_tinyint8, "QMULINT ", _1, _2),
+                                   std::bind(exec_mul_tinyint8, _1, _2, true)))
+      .insert(OpcodeInstr::mksimple(0xb7a8, 16, "QMUL", std::bind(exec_mul, _1, true)));
+
+cp0.insert(OpcodeInstr::mkfixed(0xa90, 12, 4, std::bind(dump_divmod, _1, _2, false),
+      std::bind(exec_divmod, _1, _2, false)))
+.insert(OpcodeInstr::mkfixed(0xa92, 12, 4, std::bind(dump_shrmod, _1, _2, 0), std::bind(exec_shrmod, _1, _2, 0)))
+.insert(OpcodeInstr::mkfixed(0xa93, 12, 12, std::bind(dump_shrmod, _1, _2, 2), std::bind(exec_shrmod, _1, _2, 2)))
+.insert(OpcodeInstr::mkfixed(0xa98, 12, 4, std::bind(dump_muldivmod, _1, _2, false),
+       std::bind(exec_muldivmod, _1, _2, false)))
+.insert(OpcodeInstr::mkfixed(0xa9a, 12, 4, std::bind(dump_mulshrmod, _1, _2, 0),
+       std::bind(exec_mulshrmod, _1, _2, 0)))
+.insert(OpcodeInstr::mkfixed(0xa9b, 12, 12, std::bind(dump_mulshrmod, _1, _2, 2),
+       std::bind(exec_mulshrmod, _1, _2, 2)))
+.insert(OpcodeInstr::mkfixed(0xa9c, 12, 4, std::bind(dump_shldivmod, _1, _2, 0),
+       std::bind(exec_shldivmod, _1, _2, 0)))
+.insert(OpcodeInstr::mkfixed(0xa9d, 12, 12, std::bind(dump_shldivmod, _1, _2, 2),
+       std::bind(exec_shldivmod, _1, _2, 2)));
+cp0.insert(OpcodeInstr::mkfixed(0xb7a90, 20, 4, std::bind(dump_divmod, _1, _2, true),
+      std::bind(exec_divmod, _1, _2, true)))
+.insert(
+OpcodeInstr::mkfixed(0xb7a92, 20, 4, std::bind(dump_shrmod, _1, _2, 1), std::bind(exec_shrmod, _1, _2, 1)))
+//     .insert(OpcodeInstr::mkfixed(0xb7a93, 20, 12, std::bind(dump_shrmod, _1, _2, 3), std::bind(exec_shrmod, _1, _2, 3)))
+.insert(OpcodeInstr::mkfixed(0xb7a98, 20, 4, std::bind(dump_muldivmod, _1, _2, true),
+       std::bind(exec_muldivmod, _1, _2, true)))
+.insert(OpcodeInstr::mkfixed(0xb7a9a, 20, 4, std::bind(dump_mulshrmod, _1, _2, 1),
+       std::bind(exec_mulshrmod, _1, _2, 1)))
+//     .insert(OpcodeInstr::mkfixed(0xb7a9b, 20, 12, std::bind(dump_mulshrmod, _1, _2, 3), std::bind(exec_mulshrmod, _1, _2, 3)))
+.insert(OpcodeInstr::mkfixed(0xb7a9c, 20, 4, std::bind(dump_shldivmod, _1, _2, 1),
+       std::bind(exec_shldivmod, _1, _2, 1)))
+//     .insert(OpcodeInstr::mkfixed(0xb7a9d, 20, 12, std::bind(dump_shldivmod, _1, _2, 3), std::bind(exec_shldivmod, _1, _2, 3)))
+;
+
+cp0.insert(OpcodeInstr::mkfixed(0xaa, 8, 8, instr::dump_1c_l_add(1, "LSHIFT "),
+                                  std::bind(exec_lshift_tinyint8, _1, _2, false)))
+      .insert(OpcodeInstr::mkfixed(0xab, 8, 8, instr::dump_1c_l_add(1, "RSHIFT "),
+                                   std::bind(exec_rshift_tinyint8, _1, _2, false)))
+      .insert(OpcodeInstr::mksimple(0xac, 8, "LSHIFT", std::bind(exec_lshift, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xad, 8, "RSHIFT", std::bind(exec_rshift, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xae, 8, "POW2", std::bind(exec_pow2, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xb0, 8, "AND", std::bind(exec_and, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xb1, 8, "OR", std::bind(exec_or, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xb2, 8, "XOR", std::bind(exec_xor, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xb3, 8, "NOT", std::bind(exec_not, _1, false)))
+      .insert(OpcodeInstr::mkfixed(0xb4, 8, 8, instr::dump_1c_l_add(1, "FITS "),
+                                   std::bind(exec_fits_tinyint8, _1, _2, false)))
+      .insert(OpcodeInstr::mkfixed(0xb5, 8, 8, instr::dump_1c_l_add(1, "UFITS "),
+                                   std::bind(exec_ufits_tinyint8, _1, _2, false)))
+      .insert(OpcodeInstr::mksimple(0xb600, 16, "FITSX", std::bind(exec_fits, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xb601, 16, "UFITSX", std::bind(exec_ufits, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xb602, 16, "BITSIZE", std::bind(exec_bitsize, _1, true, false)))
+      .insert(OpcodeInstr::mksimple(0xb603, 16, "UBITSIZE", std::bind(exec_bitsize, _1, false, false)));
+cp0.insert(OpcodeInstr::mkfixed(0xb7aa, 16, 8, instr::dump_1c_l_add(1, "QLSHIFT "),
+                                  std::bind(exec_lshift_tinyint8, _1, _2, true)))
+      .insert(OpcodeInstr::mkfixed(0xb7ab, 16, 8, instr::dump_1c_l_add(1, "QRSHIFT "),
+                                   std::bind(exec_rshift_tinyint8, _1, _2, true)))
+      .insert(OpcodeInstr::mksimple(0xb7ac, 16, "QLSHIFT", std::bind(exec_lshift, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xb7ad, 16, "QRSHIFT", std::bind(exec_rshift, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xb7ae, 16, "QPOW2", std::bind(exec_pow2, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xb7b0, 16, "QAND", std::bind(exec_and, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xb7b1, 16, "QOR", std::bind(exec_or, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xb7b2, 16, "QXOR", std::bind(exec_xor, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xb7b3, 16, "QNOT", std::bind(exec_not, _1, true)))
+      .insert(OpcodeInstr::mkfixed(0xb7b4, 16, 8, instr::dump_1c_l_add(1, "QFITS "),
+                                   std::bind(exec_fits_tinyint8, _1, _2, true)))
+      .insert(OpcodeInstr::mkfixed(0xb7b5, 16, 8, instr::dump_1c_l_add(1, "QUFITS "),
+                                   std::bind(exec_ufits_tinyint8, _1, _2, true)))
+      .insert(OpcodeInstr::mksimple(0xb7b600, 24, "QFITSX", std::bind(exec_fits, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xb7b601, 24, "QUFITSX", std::bind(exec_ufits, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xb7b602, 24, "QBITSIZE", std::bind(exec_bitsize, _1, true, true)))
+      .insert(OpcodeInstr::mksimple(0xb7b603, 24, "QUBITSIZE", std::bind(exec_bitsize, _1, false, true)));
+
+cp0.insert(OpcodeInstr::mksimple(0xb608, 16, "MIN", std::bind(exec_minmax, _1, 2)))
+      .insert(OpcodeInstr::mksimple(0xb609, 16, "MAX", std::bind(exec_minmax, _1, 4)))
+      .insert(OpcodeInstr::mksimple(0xb60a, 16, "MINMAX", std::bind(exec_minmax, _1, 6)))
+      .insert(OpcodeInstr::mksimple(0xb60b, 16, "ABS", std::bind(exec_abs, _1, false)));
+cp0.insert(OpcodeInstr::mksimple(0xb7b608, 24, "QMIN", std::bind(exec_minmax, _1, 3)))
+      .insert(OpcodeInstr::mksimple(0xb7b609, 24, "QMAX", std::bind(exec_minmax, _1, 5)))
+      .insert(OpcodeInstr::mksimple(0xb7b60a, 24, "QMINMAX", std::bind(exec_minmax, _1, 7)))
+      .insert(OpcodeInstr::mksimple(0xb7b60b, 24, "QABS", std::bind(exec_abs, _1, true)));
+
+cp0.insert(OpcodeInstr::mksimple(0xb8, 8, "SGN", std::bind(exec_sgn, _1, 0x987, false, "SGN")))
+      .insert(OpcodeInstr::mksimple(0xb9, 8, "LESS", std::bind(exec_cmp, _1, 0x887, false, "LESS")))
+      .insert(OpcodeInstr::mksimple(0xba, 8, "EQUAL", std::bind(exec_cmp, _1, 0x878, false, "EQUAL")))
+      .insert(OpcodeInstr::mksimple(0xbb, 8, "LEQ", std::bind(exec_cmp, _1, 0x877, false, "LEQ")))
+      .insert(OpcodeInstr::mksimple(0xbc, 8, "GREATER", std::bind(exec_cmp, _1, 0x788, false, "GREATER")))
+      .insert(OpcodeInstr::mksimple(0xbd, 8, "NEQ", std::bind(exec_cmp, _1, 0x787, false, "NEQ")))
+      .insert(OpcodeInstr::mksimple(0xbe, 8, "GEQ", std::bind(exec_cmp, _1, 0x778, false, "GEQ")))
+      .insert(OpcodeInstr::mksimple(0xbf, 8, "CMP", std::bind(exec_cmp, _1, 0x987, false, "CMP")))
+      .insert(OpcodeInstr::mkfixed(0xc0, 8, 8, std::bind(dump_op_tinyint8, "EQINT ", _1, _2),
+                                   std::bind(exec_cmp_int, _1, _2, 0x878, false, "EQ")))
+      .insert(OpcodeInstr::mkfixed(0xc1, 8, 8, std::bind(dump_op_tinyint8, "LESSINT ", _1, _2),
+                                   std::bind(exec_cmp_int, _1, _2, 0x887, false, "LESS")))
+      .insert(OpcodeInstr::mkfixed(0xc2, 8, 8, std::bind(dump_op_tinyint8, "GTINT ", _1, _2),
+                                   std::bind(exec_cmp_int, _1, _2, 0x788, false, "GT")))
+      .insert(OpcodeInstr::mkfixed(0xc3, 8, 8, std::bind(dump_op_tinyint8, "NEQINT ", _1, _2),
+                                   std::bind(exec_cmp_int, _1, _2, 0x787, false, "NEQ")))
+      .insert(OpcodeInstr::mksimple(0xc4, 8, "ISNAN", exec_is_nan))
+      .insert(OpcodeInstr::mksimple(0xc5, 8, "CHKNAN", exec_chk_nan));
+cp0.insert(OpcodeInstr::mksimple(0xb7b8, 16, "QSGN", std::bind(exec_sgn, _1, 0x987, true, "QSGN")))
+      .insert(OpcodeInstr::mksimple(0xb7b9, 16, "QLESS", std::bind(exec_cmp, _1, 0x887, true, "QLESS")))
+      .insert(OpcodeInstr::mksimple(0xb7ba, 16, "QEQUAL", std::bind(exec_cmp, _1, 0x878, true, "QEQUAL")))
+      .insert(OpcodeInstr::mksimple(0xb7bb, 16, "QLEQ", std::bind(exec_cmp, _1, 0x877, true, "QLEQ")))
+      .insert(OpcodeInstr::mksimple(0xb7bc, 16, "QGREATER", std::bind(exec_cmp, _1, 0x788, true, "QGREATER")))
+      .insert(OpcodeInstr::mksimple(0xb7bd, 16, "QNEQ", std::bind(exec_cmp, _1, 0x787, true, "QNEQ")))
+      .insert(OpcodeInstr::mksimple(0xb7be, 16, "QGEQ", std::bind(exec_cmp, _1, 0x778, true, "QGEQ")))
+      .insert(OpcodeInstr::mksimple(0xb7bf, 16, "QCMP", std::bind(exec_cmp, _1, 0x987, true, "QCMP")))
+      .insert(OpcodeInstr::mkfixed(0xb7c0, 16, 8, std::bind(dump_op_tinyint8, "QEQINT ", _1, _2),
+                                   std::bind(exec_cmp_int, _1, _2, 0x878, true, "QEQ")))
+      .insert(OpcodeInstr::mkfixed(0xb7c1, 16, 8, std::bind(dump_op_tinyint8, "QLESSINT ", _1, _2),
+                                   std::bind(exec_cmp_int, _1, _2, 0x887, true, "QLESS")))
+      .insert(OpcodeInstr::mkfixed(0xb7c2, 16, 8, std::bind(dump_op_tinyint8, "QGTINT ", _1, _2),
+                                   std::bind(exec_cmp_int, _1, _2, 0x788, true, "QGT")))
+      .insert(OpcodeInstr::mkfixed(0xb7c3, 16, 8, std::bind(dump_op_tinyint8, "QNEQINT ", _1, _2),
+                                   std::bind(exec_cmp_int, _1, _2, 0x787, true, "QNEQ")));
+
+// cellops
+
+cp0.insert(OpcodeInstr::mkext(0x88, 8, 0, std::bind(dump_push_ref, _1, _2, _3, "PUSHREF"),
+                                std::bind(exec_push_ref, _1, _2, 0, _4), compute_len_push_ref))
+      .insert(OpcodeInstr::mkext(0x89, 8, 0, std::bind(dump_push_ref, _1, _2, _3, "PUSHREFSLICE"),
+                                 std::bind(exec_push_ref, _1, _2, 1, _4), compute_len_push_ref))
+      .insert(OpcodeInstr::mkext(0x8a, 8, 0, std::bind(dump_push_ref, _1, _2, _3, "PUSHREFCONT"),
+                                 std::bind(exec_push_ref, _1, _2, 2, _4), compute_len_push_ref))
+      .insert(OpcodeInstr::mkext(0x8b, 8, 4, dump_push_slice, exec_push_slice, compute_len_push_slice))
+      .insert(OpcodeInstr::mkext(0x8c, 8, 7, dump_push_slice_r, exec_push_slice_r, compute_len_push_slice_r))
+      .insert(OpcodeInstr::mkextrange((0x8d * 8) << 7, (0x8d * 8 + 5) << 7, 18, 10, dump_push_slice_r2,
+                                      exec_push_slice_r2, compute_len_push_slice_r2))
+      .insert(OpcodeInstr::mkext(0x8e / 2, 7, 9, dump_push_cont, exec_push_cont, compute_len_push_cont))
+      .insert(OpcodeInstr::mkext(9, 4, 4, dump_push_cont_simple, exec_push_cont_simple, compute_len_push_cont_simple));
+
+reg_un_cs_cmp(cp0, 0xc700, 16, "SEMPTY", [](auto cs) { return cs->empty() && !cs->size_refs(); });
+reg_un_cs_cmp(cp0, 0xc701, 16, "SDEMPTY", [](auto cs) { return cs->empty(); });
+reg_un_cs_cmp(cp0, 0xc702, 16, "SREMPTY", [](auto cs) { return !cs->size_refs(); });
+reg_un_cs_cmp(cp0, 0xc703, 16, "SDFIRST", [](auto cs) { return cs->prefetch_long(1) == -1; });
+reg_ibin_cs_cmp(cp0, 0xc704, 16, "SDLEXCMP", [](auto cs1, auto cs2) { return cs1->lex_cmp(*cs2); });
+reg_bin_cs_cmp(cp0, 0xc705, 16, "SDEQ", [](auto cs1, auto cs2) { return !cs1->lex_cmp(*cs2); });
+reg_bin_cs_cmp(cp0, 0xc708, 16, "SDPFX", [](auto cs1, auto cs2) { return cs1->is_prefix_of(*cs2); });
+reg_bin_cs_cmp(cp0, 0xc709, 16, "SDPFXREV", [](auto cs1, auto cs2) { return cs2->is_prefix_of(*cs1); });
+reg_bin_cs_cmp(cp0, 0xc70a, 16, "SDPPFX", [](auto cs1, auto cs2) { return cs1->is_proper_prefix_of(*cs2); });
+reg_bin_cs_cmp(cp0, 0xc70b, 16, "SDPPFXREV", [](auto cs1, auto cs2) { return cs2->is_proper_prefix_of(*cs1); });
+reg_bin_cs_cmp(cp0, 0xc70c, 16, "SDSFX", [](auto cs1, auto cs2) { return cs1->is_suffix_of(*cs2); });
+reg_bin_cs_cmp(cp0, 0xc70d, 16, "SDSFXREV", [](auto cs1, auto cs2) { return cs2->is_suffix_of(*cs1); });
+reg_bin_cs_cmp(cp0, 0xc70e, 16, "SDPSFX", [](auto cs1, auto cs2) { return cs1->is_proper_suffix_of(*cs2); });
+reg_bin_cs_cmp(cp0, 0xc70f, 16, "SDPSFXREV", [](auto cs1, auto cs2) { return cs2->is_proper_suffix_of(*cs1); });
+reg_iun_cs_cmp(cp0, 0xc710, 16, "SDCNTLEAD0", [](auto cs) { return cs->count_leading(0); });
+reg_iun_cs_cmp(cp0, 0xc711, 16, "SDCNTLEAD1", [](auto cs) { return cs->count_leading(1); });
+reg_iun_cs_cmp(cp0, 0xc712, 16, "SDCNTTRAIL0", [](auto cs) { return cs->count_trailing(0); });
+reg_iun_cs_cmp(cp0, 0xc713, 16, "SDCNTTRAIL1", [](auto cs) { return cs->count_trailing(1); });
+
+cp0.insert(OpcodeInstr::mksimple(0xc8, 8, "NEWC", exec_new_builder))
+      .insert(OpcodeInstr::mksimple(0xc9, 8, "ENDC", exec_builder_to_cell))
+      .insert(
+          OpcodeInstr::mkfixed(0xca, 8, 8, instr::dump_1c_l_add(1, "STI "), std::bind(exec_store_int, _1, _2, true)))
+      .insert(
+          OpcodeInstr::mkfixed(0xcb, 8, 8, instr::dump_1c_l_add(1, "STU "), std::bind(exec_store_int, _1, _2, false)))
+      .insert(OpcodeInstr::mksimple(0xcc, 8, "STREF", std::bind(exec_store_ref, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xcd, 8, "ENDCST", std::bind(exec_store_builder_as_ref_rev, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xce, 8, "STSLICE", std::bind(exec_store_slice, _1, false)))
+      .insert(OpcodeInstr::mkfixed(0xcf00 >> 3, 13, 3, dump_store_int_var, exec_store_int_var))
+      .insert(OpcodeInstr::mkfixed(0xcf08 >> 3, 13, 11, dump_store_int_fixed, exec_store_int_fixed))
+      .insert(OpcodeInstr::mksimple(0xcf10, 16, "STREF", std::bind(exec_store_ref, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xcf11, 16, "STBREF", std::bind(exec_store_builder_as_ref, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xcf12, 16, "STSLICE", std::bind(exec_store_slice, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xcf13, 16, "STB", std::bind(exec_store_builder, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xcf14, 16, "STREFR", std::bind(exec_store_ref_rev, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xcf15, 16, "STBREFR", std::bind(exec_store_builder_as_ref_rev, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xcf16, 16, "STSLICER", std::bind(exec_store_slice_rev, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xcf17, 16, "STBR", std::bind(exec_store_builder_rev, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xcf18, 16, "STREFQ", std::bind(exec_store_ref, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xcf19, 16, "STBREFQ", std::bind(exec_store_builder_as_ref, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xcf1a, 16, "STSLICEQ", std::bind(exec_store_slice, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xcf1b, 16, "STBQ", std::bind(exec_store_builder, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xcf1c, 16, "STREFRQ", std::bind(exec_store_ref_rev, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xcf1d, 16, "STBREFRQ", std::bind(exec_store_builder_as_ref_rev, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xcf1e, 16, "STSLICERQ", std::bind(exec_store_slice_rev, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xcf1f, 16, "STBRQ", std::bind(exec_store_builder_rev, _1, true)))
+      .insert(OpcodeInstr::mkextrange(0xcf20, 0xcf22, 16, 1, dump_store_const_ref, exec_store_const_ref,
+                                      compute_len_store_const_ref))
+      .insert(OpcodeInstr::mksimple(0xcf23, 16, "ENDXC", exec_builder_to_special_cell))
+      .insert(OpcodeInstr::mkfixed(0xcf28 >> 2, 14, 2, dump_store_le_int, exec_store_le_int))
+      .insert(OpcodeInstr::mksimple(
+          0xcf30, 16, "BDEPTH",
+          std::bind(exec_int_builder_func, _1, "BDEPTH", [](Ref<CellBuilder> b) { return b->get_depth(); })))
+      .insert(OpcodeInstr::mksimple(
+          0xcf31, 16, "BBITS",
+          std::bind(exec_int_builder_func, _1, "BBITS", [](Ref<CellBuilder> b) { return b->size(); })))
+      .insert(OpcodeInstr::mksimple(
+          0xcf32, 16, "BREFS",
+          std::bind(exec_int_builder_func, _1, "BREFS", [](Ref<CellBuilder> b) { return b->size_refs(); })))
+      .insert(OpcodeInstr::mksimple(
+          0xcf33, 16, "BBITREFS",
+          std::bind(exec_2int_builder_func, _1, "BBITSREFS",
+                    [](Ref<CellBuilder> b) { return std::make_pair(b->size(), b->size_refs()); })))
+      .insert(OpcodeInstr::mksimple(
+          0xcf35, 16, "BREMBITS",
+          std::bind(exec_int_builder_func, _1, "BREMBITS", [](Ref<CellBuilder> b) { return b->remaining_bits(); })))
+      .insert(OpcodeInstr::mksimple(
+          0xcf36, 16, "BREMREFS",
+          std::bind(exec_int_builder_func, _1, "BREMREFS", [](Ref<CellBuilder> b) { return b->remaining_refs(); })))
+      .insert(OpcodeInstr::mksimple(
+          0xcf37, 16, "BREMBITREFS",
+          std::bind(exec_2int_builder_func, _1, "BREMBITSREFS",
+                    [](Ref<CellBuilder> b) { return std::make_pair(b->remaining_bits(), b->remaining_refs()); })))
+      .insert(OpcodeInstr::mkfixed(0xcf38, 16, 8, instr::dump_1c_l_add(1, "BCHKBITS "),
+                                   std::bind(exec_builder_chk_bits, _1, _2, false)))
+      .insert(OpcodeInstr::mksimple(0xcf39, 16, "BCHKBITS", std::bind(exec_builder_chk_bits_refs, _1, 1)))
+      .insert(OpcodeInstr::mksimple(0xcf3a, 16, "BCHKREFS", std::bind(exec_builder_chk_bits_refs, _1, 2)))
+      .insert(OpcodeInstr::mksimple(0xcf3b, 16, "BCHKBITREFS", std::bind(exec_builder_chk_bits_refs, _1, 3)))
+      .insert(OpcodeInstr::mkfixed(0xcf3c, 16, 8, instr::dump_1c_l_add(1, "BCHKBITSQ "),
+                                   std::bind(exec_builder_chk_bits, _1, _2, true)))
+      .insert(OpcodeInstr::mksimple(0xcf3d, 16, "BCHKBITSQ", std::bind(exec_builder_chk_bits_refs, _1, 5)))
+      .insert(OpcodeInstr::mksimple(0xcf3e, 16, "BCHKREFSQ", std::bind(exec_builder_chk_bits_refs, _1, 6)))
+      .insert(OpcodeInstr::mksimple(0xcf3f, 16, "BCHKBITREFSQ", std::bind(exec_builder_chk_bits_refs, _1, 7)))
+      .insert(OpcodeInstr::mksimple(0xcf40, 16, "STZEROES", std::bind(exec_store_same, _1, "STZEROES", 0)))
+      .insert(OpcodeInstr::mksimple(0xcf41, 16, "STONES", std::bind(exec_store_same, _1, "STONES", 1)))
+      .insert(OpcodeInstr::mksimple(0xcf42, 16, "STSAME", std::bind(exec_store_same, _1, "STSAME", -1)))
+      .insert(OpcodeInstr::mkext(0xcf80 >> 7, 9, 5, dump_store_const_slice, exec_store_const_slice,
+                                 compute_len_store_const_slice));
+
+cp0.insert(OpcodeInstr::mksimple(0xd0, 8, "CTOS", exec_cell_to_slice))
+      .insert(OpcodeInstr::mksimple(0xd1, 8, "ENDS", exec_slice_chk_empty))
+      .insert(
+            OpcodeInstr::mkfixed(0xd2, 8, 8, instr::dump_1c_l_add(1, "LDI "), std::bind(exec_load_int_fixed, _1, _2, 0)))
+      .insert(
+            OpcodeInstr::mkfixed(0xd3, 8, 8, instr::dump_1c_l_add(1, "LDU "), std::bind(exec_load_int_fixed, _1, _2, 1)))
+      .insert(OpcodeInstr::mksimple(0xd4, 8, "LDREF", std::bind(exec_load_ref, _1, 0)))
+      .insert(OpcodeInstr::mksimple(0xd5, 8, "LDREFRTOS", std::bind(exec_load_ref_rev_to_slice, _1, 0)))
+      .insert(OpcodeInstr::mkfixed(0xd6, 8, 8, instr::dump_1c_l_add(1, "LDSLICE "), exec_load_slice_fixed))
+      .insert(OpcodeInstr::mkfixed(0xd700 >> 3, 13, 3, dump_load_int_var, exec_load_int_var))
+      .insert(OpcodeInstr::mkfixed(0xd708 >> 3, 13, 11, dump_load_int_fixed2, exec_load_int_fixed2))
+      .insert(OpcodeInstr::mkfixed(0xd710 >> 3, 13, 3, dump_preload_uint_fixed_0e, exec_preload_uint_fixed_0e))
+      .insert(OpcodeInstr::mkfixed(0xd718 >> 2, 14, 2, dump_load_slice, exec_load_slice))
+      .insert(OpcodeInstr::mkfixed(0xd71c >> 2, 14, 10, dump_load_slice_fixed2, exec_load_slice_fixed2))
+      .insert(OpcodeInstr::mksimple(0xd720, 16, "SDCUTFIRST",
+                                    std::bind(exec_slice_op_args, _1, "SDCUTFIRST", 1023,
+                                                [](auto& cs, unsigned bits) { return cs.only_first(bits); })))
+      .insert(OpcodeInstr::mksimple(0xd721, 16, "SDSKIPFIRST",
+                                    std::bind(exec_slice_op_args, _1, "SDSKIPFIRST", 1023,
+                                                [](auto& cs, unsigned bits) { return cs.skip_first(bits); })))
+      .insert(OpcodeInstr::mksimple(0xd722, 16, "SDCUTLAST",
+                                    std::bind(exec_slice_op_args, _1, "SDCUTLAST", 1023,
+                                                [](auto& cs, unsigned bits) { return cs.only_last(bits); })))
+      .insert(OpcodeInstr::mksimple(0xd723, 16, "SDSKIPLAST",
+                                    std::bind(exec_slice_op_args, _1, "SDSKIPLAST", 1023,
+                                                [](auto& cs, unsigned bits) { return cs.skip_last(bits); })))
+      .insert(OpcodeInstr::mksimple(
+            0xd724, 16, "SDSUBSTR",
+            std::bind(exec_slice_op_args2, _1, "SDSUBSTR", 1023, 1023,
+                  [](auto& cs, unsigned offs, unsigned bits) { return cs.skip_first(offs) && cs.only_first(bits); })))
+      .insert(OpcodeInstr::mksimple(0xd726, 16, "SDBEGINSX", std::bind(exec_slice_begins_with, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xd727, 16, "SDBEGINSXQ", std::bind(exec_slice_begins_with, _1, true)))
+      .insert(OpcodeInstr::mkext(0xd728 >> 3, 13, 8, dump_slice_begins_with_const, exec_slice_begins_with_const,
+                              compute_len_slice_begins_with_const))
+      .insert(OpcodeInstr::mksimple(
+            0xd730, 16, "SCUTFIRST",
+            std::bind(exec_slice_op_args2, _1, "SCUTFIRST", 1023, 4,
+                  [](auto& cs, unsigned bits, unsigned refs) { return cs.only_first(bits, refs); })))
+      .insert(OpcodeInstr::mksimple(
+            0xd731, 16, "SSKIPFIRST",
+            std::bind(exec_slice_op_args2, _1, "SSKIPFIRST", 1023, 4,
+                  [](auto& cs, unsigned bits, unsigned refs) { return cs.skip_first(bits, refs); })))
+      .insert(OpcodeInstr::mksimple(
+            0xd732, 16, "SCUTLAST",
+            std::bind(exec_slice_op_args2, _1, "SCUTLAST", 1023, 4,
+                  [](auto& cs, unsigned bits, unsigned refs) { return cs.only_last(bits, refs); })))
+      .insert(OpcodeInstr::mksimple(
+            0xd733, 16, "SSKIPLAST",
+            std::bind(exec_slice_op_args2, _1, "SSKIPLAST", 1023, 4,
+                  [](auto& cs, unsigned bits, unsigned refs) { return cs.skip_last(bits, refs); })))
+      .insert(OpcodeInstr::mksimple(0xd734, 16, "SUBSLICE", exec_subslice))
+      .insert(OpcodeInstr::mksimple(0xd736, 16, "SPLIT", std::bind(exec_split, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xd737, 16, "SPLITQ", std::bind(exec_split, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xd739, 16, "XCTOS", exec_cell_to_slice_maybe_special))
+      .insert(OpcodeInstr::mksimple(0xd73a, 16, "XLOAD", std::bind(exec_load_special_cell, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xd73b, 16, "XLOADQ", std::bind(exec_load_special_cell, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xd741, 16, "SCHKBITS",
+                                    std::bind(exec_slice_chk_op_args, _1, "SCHKBITS", 1023, false,
+                                                [](auto cs, unsigned bits) { return cs.have(bits); })))
+      .insert(OpcodeInstr::mksimple(0xd742, 16, "SCHKREFS",
+                                    std::bind(exec_slice_chk_op_args, _1, "SCHKREFS", 1023, false,
+                                                [](auto cs, unsigned refs) { return cs.have_refs(refs); })))
+      .insert(OpcodeInstr::mksimple(
+            0xd743, 16, "SCHKBITREFS",
+            std::bind(exec_slice_chk_op_args2, _1, "SCHKBITREFS", 1023, 4, false,
+                  [](auto cs, unsigned bits, unsigned refs) { return cs.have(bits) && cs.have_refs(refs); })))
+      .insert(OpcodeInstr::mksimple(0xd745, 16, "SCHKBITSQ",
+                                    std::bind(exec_slice_chk_op_args, _1, "SCHKBITSQ", 1023, true,
+                                                [](auto cs, unsigned bits) { return cs.have(bits); })))
+      .insert(OpcodeInstr::mksimple(0xd746, 16, "SCHKREFSQ",
+                                    std::bind(exec_slice_chk_op_args, _1, "SCHKREFSQ", 1023, true,
+                                                [](auto cs, unsigned refs) { return cs.have_refs(refs); })))
+      .insert(OpcodeInstr::mksimple(
+            0xd747, 16, "SCHKBITREFSQ",
+            std::bind(exec_slice_chk_op_args2, _1, "SCHKBITREFSQ", 1023, 4, true,
+                  [](auto cs, unsigned bits, unsigned refs) { return cs.have(bits) && cs.have_refs(refs); })))
+      .insert(OpcodeInstr::mksimple(0xd748, 16, "PLDREFVAR", exec_preload_ref))
+      .insert(OpcodeInstr::mksimple(0xd749, 16, "SBITS", std::bind(exec_slice_bits_refs, _1, 1)))
+      .insert(OpcodeInstr::mksimple(0xd74a, 16, "SREFS", std::bind(exec_slice_bits_refs, _1, 2)))
+      .insert(OpcodeInstr::mksimple(0xd74b, 16, "SBITREFS", std::bind(exec_slice_bits_refs, _1, 3)))
+      .insert(OpcodeInstr::mkfixed(0xd74c >> 2, 14, 2, instr::dump_1c_and(3, "PLDREFIDX "), exec_preload_ref_fixed))
+      .insert(OpcodeInstr::mkfixed(0xd75, 12, 4, dump_load_le_int, exec_load_le_int))
+      .insert(OpcodeInstr::mksimple(0xd760, 16, "LDZEROES", std::bind(exec_load_same, _1, "LDZEROES", 0)))
+      .insert(OpcodeInstr::mksimple(0xd761, 16, "LDONES", std::bind(exec_load_same, _1, "LDONES", 1)))
+      .insert(OpcodeInstr::mksimple(0xd762, 16, "LDSAME", std::bind(exec_load_same, _1, "LDSAME", -1)))
+      .insert(OpcodeInstr::mksimple(0xd764, 16, "SDEPTH", exec_slice_depth))
+      .insert(OpcodeInstr::mksimple(0xd765, 16, "CDEPTH", exec_cell_depth));
+
+// contops
+
+cp0.insert(OpcodeInstr::mksimple(0xd8, 8, "EXECUTE", exec_execute))
+      .insert(OpcodeInstr::mksimple(0xd9, 8, "JMPX", exec_jmpx))
+      .insert(OpcodeInstr::mkfixed(0xda, 8, 8, instr::dump_2c("CALLXARGS ", ","), exec_callx_args))
+      .insert(OpcodeInstr::mkfixed(0xdb0, 12, 4, instr::dump_1c("CALLXARGS ", ",-1"), exec_callx_args_p))
+      .insert(OpcodeInstr::mkfixed(0xdb1, 12, 4, instr::dump_1c("JMPXARGS "), exec_jmpx_args))
+      .insert(OpcodeInstr::mkfixed(0xdb2, 12, 4, instr::dump_1c("RETARGS "), exec_ret_args))
+      .insert(OpcodeInstr::mksimple(0xdb30, 16, "RET", exec_ret))
+      .insert(OpcodeInstr::mksimple(0xdb31, 16, "RETALT", exec_ret_alt))
+      .insert(OpcodeInstr::mksimple(0xdb32, 16, "RETBOOL", exec_ret_bool))
+      .insert(OpcodeInstr::mksimple(0xdb34, 16, "CALLCC", exec_callcc))
+      .insert(OpcodeInstr::mksimple(0xdb35, 16, "JMPXDATA", exec_jmpx_data))
+      .insert(OpcodeInstr::mkfixed(0xdb36, 16, 8, instr::dump_2c("CALLCCARGS ", ","), exec_callcc_args))
+      .insert(OpcodeInstr::mksimple(0xdb38, 16, "CALLXVARARGS", exec_callx_varargs))
+      .insert(OpcodeInstr::mksimple(0xdb39, 16, "RETVARARGS", exec_ret_varargs))
+      .insert(OpcodeInstr::mksimple(0xdb3a, 16, "JMPXVARARGS", exec_jmpx_varargs))
+      .insert(OpcodeInstr::mksimple(0xdb3b, 16, "CALLCCVARARGS", exec_callcc_varargs))
+      .insert(OpcodeInstr::mkext(0xdb3c, 16, 0, std::bind(dump_push_ref, _1, _2, _3, "CALLREF"),
+                                 std::bind(exec_do_with_ref, _1, _2, _4,
+                                           [](auto st, auto cont) { return st->call(std::move(cont)); }, "CALLREF"),
+                                 compute_len_push_ref))
+      .insert(OpcodeInstr::mkext(0xdb3d, 16, 0, std::bind(dump_push_ref, _1, _2, _3, "JMPREF"),
+                                 std::bind(exec_do_with_ref, _1, _2, _4,
+                                           [](auto st, auto cont) { return st->jump(std::move(cont)); }, "JMPREF"),
+                                 compute_len_push_ref))
+      .insert(OpcodeInstr::mkext(0xdb3e, 16, 0, std::bind(dump_push_ref, _1, _2, _3, "JMPREFDATA"),
+                                 std::bind(exec_do_with_ref, _1, _2, _4,
+                                           [](auto st, auto cont) {
+                                             st->push_code();
+                                             return st->jump(std::move(cont));
+                                           },
+                                           "JMPREFDATA"),
+                                 compute_len_push_ref))
+      .insert(OpcodeInstr::mksimple(0xdb3f, 16, "RETDATA", exec_ret_data))
+      .insert(OpcodeInstr::mkfixed(0xdb4, 12, 12, dump_runvm, exec_runvm)->require_version(4))
+      .insert(OpcodeInstr::mksimple(0xdb50, 16, "RUNVMX ", exec_runvmx)->require_version(4));
+
+cp0.insert(OpcodeInstr::mksimple(0xdc, 8, "IFRET", exec_ifret))
+      .insert(OpcodeInstr::mksimple(0xdd, 8, "IFNOTRET", exec_ifnotret))
+      .insert(OpcodeInstr::mksimple(0xde, 8, "IF", exec_if))
+      .insert(OpcodeInstr::mksimple(0xdf, 8, "IFNOT", exec_ifnot))
+      .insert(OpcodeInstr::mksimple(0xe0, 8, "IFJMP", exec_if_jmp))
+      .insert(OpcodeInstr::mksimple(0xe1, 8, "IFNOTJMP", exec_ifnot_jmp))
+      .insert(OpcodeInstr::mksimple(0xe2, 8, "IFELSE", exec_if_else))
+      .insert(OpcodeInstr::mkext(0xe300, 16, 0, std::bind(dump_push_ref, _1, _2, _3, "IFREF"),
+                                 std::bind(exec_do_with_cell, _1, _2, _4,
+                                           [](auto st, auto cell) {
+                                             return st->get_stack().pop_bool()
+                                                        ? st->call(st->ref_to_cont(std::move(cell)))
+                                                        : 0;
+                                           },
+                                           "IFREF"),
+                                 compute_len_push_ref))
+      .insert(OpcodeInstr::mkext(0xe301, 16, 0, std::bind(dump_push_ref, _1, _2, _3, "IFNOTREF"),
+                                 std::bind(exec_do_with_cell, _1, _2, _4,
+                                           [](auto st, auto cell) {
+                                             return st->get_stack().pop_bool()
+                                                        ? 0
+                                                        : st->call(st->ref_to_cont(std::move(cell)));
+                                           },
+                                           "IFNOTREF"),
+                                 compute_len_push_ref))
+      .insert(OpcodeInstr::mkext(0xe302, 16, 0, std::bind(dump_push_ref, _1, _2, _3, "IFJMPREF"),
+                                 std::bind(exec_do_with_cell, _1, _2, _4,
+                                           [](auto st, auto cell) {
+                                             return st->get_stack().pop_bool()
+                                                        ? st->jump(st->ref_to_cont(std::move(cell)))
+                                                        : 0;
+                                           },
+                                           "IFJMPREF"),
+                                 compute_len_push_ref))
+      .insert(OpcodeInstr::mkext(0xe303, 16, 0, std::bind(dump_push_ref, _1, _2, _3, "IFNOTJMPREF"),
+                                 std::bind(exec_do_with_cell, _1, _2, _4,
+                                           [](auto st, auto cell) {
+                                             return st->get_stack().pop_bool()
+                                                        ? 0
+                                                        : st->jump(st->ref_to_cont(std::move(cell)));
+                                           },
+                                           "IFNOTJMPREF"),
+                                 compute_len_push_ref))
+      .insert(OpcodeInstr::mksimple(0xe304, 16, "CONDSEL", exec_condsel))
+      .insert(OpcodeInstr::mksimple(0xe305, 16, "CONDSELCHK", exec_condsel_chk))
+      .insert(OpcodeInstr::mksimple(0xe308, 16, "IFRETALT", exec_ifretalt))
+      .insert(OpcodeInstr::mksimple(0xe309, 16, "IFNOTRETALT", exec_ifnotretalt))
+      .insert(OpcodeInstr::mkext(0xe30d, 16, 0, std::bind(dump_push_ref, _1, _2, _3, "IFREFELSE"),
+                                 std::bind(exec_ifelse_ref, _1, _2, _4, true), compute_len_push_ref))
+      .insert(OpcodeInstr::mkext(0xe30e, 16, 0, std::bind(dump_push_ref, _1, _2, _3, "IFELSEREF"),
+                                 std::bind(exec_ifelse_ref, _1, _2, _4, false), compute_len_push_ref))
+      .insert(OpcodeInstr::mkext(0xe30f, 16, 0, std::bind(dump_push_ref2, _1, _2, _3, "IFREFELSEREF"),
+                                 exec_ifref_elseref, compute_len_push_ref2))
+      .insert(OpcodeInstr::mkfixed(0xe380 >> 6, 10, 6, dump_if_bit_jmp, exec_if_bit_jmp))
+      .insert(OpcodeInstr::mkext(0xe3c0 >> 6, 10, 6, dump_if_bit_jmpref, exec_if_bit_jmpref, compute_len_push_ref))
+      .insert(OpcodeInstr::mksimple(0xe4, 8, "REPEAT", std::bind(exec_repeat, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xe5, 8, "REPEATEND", std::bind(exec_repeat_end, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xe6, 8, "UNTIL", std::bind(exec_until, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xe7, 8, "UNTILEND", std::bind(exec_until_end, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xe8, 8, "WHILE", std::bind(exec_while, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xe9, 8, "WHILEEND", std::bind(exec_while_end, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xea, 8, "AGAIN", std::bind(exec_again, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xeb, 8, "AGAINEND", std::bind(exec_again_end, _1, false)))
+      .insert(OpcodeInstr::mksimple(0xe314, 16, "REPEATBRK", std::bind(exec_repeat, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xe315, 16, "REPEATENDBRK", std::bind(exec_repeat_end, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xe316, 16, "UNTILBRK", std::bind(exec_until, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xe317, 16, "UNTILENDBRK", std::bind(exec_until_end, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xe318, 16, "WHILEBRK", std::bind(exec_while, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xe319, 16, "WHILEENDBRK", std::bind(exec_while_end, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xe31a, 16, "AGAINBRK", std::bind(exec_again, _1, true)))
+      .insert(OpcodeInstr::mksimple(0xe31b, 16, "AGAINENDBRK", std::bind(exec_again_end, _1, true)));
+

@@ -1,0 +1,20 @@
+{
+  "name": "tvm-spec",
+  "version": "1.0.0",
+  "description": "tvm-spec typescript wrapper",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "build": "npx tsc",
+    "gen-spec": "node gen-spec.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "json-schema-to-typescript": "^13.1.2",
+    "typescript": "^5.3.3"
+  }
+}

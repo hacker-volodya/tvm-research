@@ -1,0 +1,27 @@
+"Asm.fif" include
+<{
+    2 INT 2 INT 1 INT QADDRSHIFTMODC
+    10 QRSHIFTR#
+}>s 
+
+1000000 // gas limit
+
+0
+256 + // enable stack trace
+64 + // log vm ops to stderr
+8 + // gas limit
+
+runvmx .s
+
+
+// special continuations
+
+// QuitCont: exit
+// ExcQuitCont: pop int (-1, 0), exit
+// PushIntCont: push int, jump to cont (only cc)
+// ArgContExt: adjust cr, jump to cont (?)
+// RepeatCont: jump to cont (from stack), jump to cc, set c0 to RepeatCont
+// AgainCont: set c0 to AgaintCont, jump to cont (from stack)
+// UntilCont: pop bool from stack, set c0 to UntilCont, jump to cont (from stack)
+// WhileCont: pop bool from stack, jump to cond/body/after (from stack), set c0 to opposite WhileCont
+// OrdCont: set code

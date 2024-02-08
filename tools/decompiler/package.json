@@ -1,0 +1,16 @@
+{
+  "name": "decompiler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "npx tsc",
+    "start": "node dist/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "tvm-spec": "file:../tvm-spec",
+    "typescript": "^5.3.3"
+  }
+}

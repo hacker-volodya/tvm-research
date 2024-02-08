@@ -1,0 +1,4 @@
+1. inner continuations stack must be analyzed at the time of execution (not at PUSHCONT), control flow feature of tvm-spec should help
+2. however, current algorithm assume that initial stack arguments of smc are known, will be better to implement automatic recognition of initial stack of a continuation, so p.1 will not be a problem (determine cont args at the time of PUSHCONT, represent each cont as a lambda-like function in decompiled code).
+3. if variable used only once => inline expression
+4. however, if dealing with builder or slice operations or smth like that, it would be nice to compact `var5, var6 = LDU(31, var4); var7, var8 = LDU(31, var6)` to `var5 = var4~LDU(31); var7 = var4~LDU(31)` (it's a p.3 special case)
