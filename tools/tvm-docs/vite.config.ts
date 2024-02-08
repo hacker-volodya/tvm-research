@@ -7,4 +7,10 @@ export default defineConfig({
   optimizeDeps: {
     include: ["tvm-spec"],
   },
+  build: {
+    sourcemap: true,
+    commonjsOptions: {
+      include: [/.js$/],
+    },
+  }
 })
