@@ -12,5 +12,6 @@ export default defineConfig({
     commonjsOptions: {
       include: [/.js$/],
     },
-  }
+  },
+  base: "/tvm-research/"
 })
