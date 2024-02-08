@@ -1,0 +1,24 @@
+EXECUTE cc <= c *0 (cc *0 c0)
+JMPX cc <= c
+CALLXARGS ?, cc <= c *0 cc
+JMPXARGS ?, cc <= c
+RETARGS ?, cc <= c0
+RET cc <= c0
+RETALT cc <= c1
+BRANCH cc <= c0 || cc <= c1
+CALLCC ?, cc <= с
+JMPXDATA ?, cc <= c
+CALLCCARGS 
+CALLXVARARGS
+RETVARARGS
+JMPXVARARGS
+CALLCCVARARGS
+IFRET cc <= c0 || nop
+IF cc <= c *0 cc || nop
+IFJMP cc <= c || nop
+IFELSE cc <= c *0 cc || cc <= c' *0 cc
+REPEAT cc <= repeat_cont(body=c, after=cc, count=n)
+REPEATEND cc <= repeat_cont(body=cc, after=c0, count=n)
+UNTIL cc <= until_cont(body=c, after=cc)
+UNTILEND cc <= until_cont(body=cc, after=c0)
+TRY cc <= c *0 (cc *0 c0 *1 c1 *2 c2) *2 (c' *0 (cc *0 c0 *1 c1 *2 c2) *2 c2)
