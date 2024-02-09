@@ -16,18 +16,18 @@ import VueMarkdown from 'vue-markdown-render'
         <section class="py-10">
           <div class="container mx-auto px-4 md:px-6">
             <VaDataTable :items="cp0.instructions.filter(insn => insn.doc.category == currentTab)" :columns="columns"
-              clickable striped hoverable @row:click="({ row }) => row.toggleRowDetails()">
+              clickable striped hoverable @row:click="({ row }) => row.toggleRowDetails()" :cell-bind="() => ({ 'class': 'text-wrap' })">
               <template #cell(doc.description)="{ value }">
                 <vue-markdown :source="value"></vue-markdown>
               </template>
               <template #expandableRow="{ rowData }">
-                <div class="text-sm px-4 md:px-8 py-8 bg-white dark:bg-black-600">
+                <div class="text-sm px-4 md:px-8 py-8 bg-white dark:bg-black-600 text-wrap">
                   <div class="flex flex-col lg:flex-row">
                     <div>
                       <div>
-                        <vue-markdown :source="rowData.doc.description"></vue-markdown>
+                        <vue-markdown :source="rowData.doc.description" class="text-wrap"></vue-markdown>
                       </div>
-                      <pre class="py-4">{{ JSON.stringify(rowData, undefined, 4) }}</pre>
+                      <pre class="py-4 text-wrap">{{ JSON.stringify(rowData, undefined, 4) }}</pre>
                     </div>
                   </div>
                 </div>
@@ -51,7 +51,6 @@ export default defineComponent({
     const columns = [
       { key: "bytecode.doc_opcode", label: 'opcode' },
       { key: "mnemonic" },
-      { key: "doc.gas", width: '70px', label: 'gas' },
       { key: "doc.description", label: 'description' },
     ];
 
