@@ -37,5 +37,68 @@
             { "type": "register", "index": 0 }
         ],
         "nobranch": true
+    },
+    {
+        "branches": [
+            {
+                "type": "variable",
+                "var_name": "c",
+                "save": {
+                    "c0": {
+                        "type": "special",
+                        "name": "pushint",
+                        "args": {
+                            "next": {
+                                "type": "cc",
+                                "save": {
+                                    "c0": { "type": "register", "index": 0 },
+                                    "c1": { "type": "register", "index": 1 }
+                                }
+                            },
+                            "value": -1
+                        }
+                    },
+                    "c1": {
+                        "type": "special",
+                        "name": "pushint",
+                        "args": {
+                            "next": {
+                                "type": "cc",
+                                "save": {
+                                    "c0": { "type": "register", "index": 0 },
+                                    "c1": { "type": "register", "index": 1 }
+                                }
+                            },
+                            "value": 0
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "branches": [
+            {
+                "type": "special",
+                "name": "repeat",
+                "args": {
+                    "count": {
+                        "type": "variable",
+                        "var_name": "n"
+                    },
+                    "body": {
+                        "type": "variable",
+                        "var_name": "c"
+                    },
+                    "after": {
+                        "type": "cc",
+                        "save": {
+                            "c0": { "type": "register", "index": 0 }
+                        }
+                    }
+                }
+            }
+        ],
+        "nobranch": true
     }
 ]

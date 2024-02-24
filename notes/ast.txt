@@ -1,0 +1,122 @@
+Statement: Instruction, defining output vars, basic block, <high-level ops>
+Expression: instruction operand, instruction stack input
+
+Data slice
+
+-> disassemble
+
+Continuation
+- Instruction
+-- Operands
+--- Operand: Integer
+--- Operand: Data slice
+--- Operand: Continuation
+---- Instruction
+---- Instruction
+- Instruction
+- Instruction
+
+-> recover basic blocks
+
+Continuation
+- Block
+-- Instruction
+--- Operands
+---- Operand: Integer
+---- Operand: Data slice
+---- Operand: Continuation
+----- Instruction
+----- Instruction
+-- Instruction
+- Block
+-- Instruction
+
+-> recover value flow
+
+Continuation
+- Block
+-- VarsDef
+--- Defs
+---- v1 = x
+---- v2 = y
+---- v3 = z
+--- Expr
+---- 
+
+-- Instruction
+--- Operands
+---- Operand: Integer
+---- Operand: Data slice
+---- Operand: Continuation
+----- Instruction
+----- Instruction
+-- Instruction
+- Block
+-- Instruction
+
+cont {
+  block 1 (arg1) {
+    SETCP0
+    DUP
+    # set(a=arg1)
+    IFNOTRET
+    # dest(c0)
+    # dest(block 2)
+  }
+  block 2 (arg1) {
+    DUP
+    INT(85143)
+    # var1 = get(result)
+    # set(a=arg1)
+    # set(b=var1)
+    EQUAL
+    # var2 = get(result)
+    PUSHCONT(cont {
+      block 3 (arg1) {
+        DROP
+        PUSHCTR(4)
+        CTOS
+        PLDU(31)
+        # implicit_ret
+        # dest(c0)
+      }
+    })
+    # var3 = get(cont)
+    # set(cont=var3)
+    # set(cond=var2)
+    IFJMP
+    # dest(var3)
+    # dest(block 4)
+  }
+  block 4 (arg1) {
+    # set(a=arg1)
+    INC
+    # var1 = get(result)
+    # set(a=var1)
+    THROWIF(31)
+    ...
+  }
+}
+
+Continuation: Expr {
+  body: Stmt[]
+}
+
+Block: Stmt {
+  args: Variable[]
+  body: Stmt[]
+  destinations: Expr[]
+}
+
+Instruction: Stmt {
+  spec: InstructionSpec
+  operands: Map<string, Expr>
+}
+
+SetInputs: Stmt {
+  inputs: Map<string, Expr>
+}
+
+SetOutputs: Stmt {
+  outputs: Map<Variable, string>
+}
