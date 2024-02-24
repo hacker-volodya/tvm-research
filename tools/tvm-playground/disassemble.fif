@@ -1,0 +1,3 @@
+#!/usr/bin/env fift -s
+"Disasm.fif" include
+$1 file>B B>boc <s disasm
