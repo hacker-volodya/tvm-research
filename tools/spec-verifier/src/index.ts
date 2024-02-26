@@ -24,22 +24,22 @@ interface CellOperand {
 type OperandType = IntegerOperand | CellOperand;
 
 function getInstructionOperandTypes(instruction: Instruction): Map<string, OperandType> {
-    let unsignedRange = (operand: Operand): IntegerOperand => ({
+    let unsignedRange = (bitSize: number): IntegerOperand => ({
         'type': 'integer',
         'minValue': BigInt(0),
-        'maxValue': (BigInt(1) << BigInt((operand.loader_args!.size as number))) - BigInt(1)
+        'maxValue': (BigInt(1) << BigInt(bitSize)) - BigInt(1)
     });
 
-    let unsignedRangeWithBounds = (operand: Operand, bounds: OperandsRangeCheck | undefined): IntegerOperand => {
+    let unsignedRangeWithBounds = (bitSize: number, bounds: OperandsRangeCheck | undefined): IntegerOperand => {
         if (bounds) {
             return { type: 'integer', maxValue: BigInt(bounds.to), minValue: BigInt(bounds.from) }
         } else {
-            return unsignedRange(operand);
+            return unsignedRange(bitSize);
         }
     };
 
-    let signedRange = (operand: Operand): IntegerOperand => {
-        let max = unsignedRange(operand).maxValue / BigInt(2);
+    let signedRange = (bitSize: number): IntegerOperand => {
+        let max = unsignedRange(bitSize).maxValue / BigInt(2);
         return {
             'type': 'integer',
             'minValue': -max - BigInt(1),
@@ -54,24 +54,20 @@ function getInstructionOperandTypes(instruction: Instruction): Map<string, Opera
     }
     for (let i = 0; i < operands.length; i++) {
         let operand = operands[i];
-        if (operand.internal) {
-            continue;
-        }
         if (operand.loader == "subslice") {
             let minBits = operand.loader_args!.bits_padding as number ?? 0;
             let minRefs = operand.loader_args!.refs_add as number ?? 0;
             let maxBits = minBits;
             let maxRefs = minRefs;
-            // assuming length vars are always unsigned
-            let bitLengthVarName = operand.loader_args?.bits_length_var;
-            if (bitLengthVarName) {
-                let lengthVar = operands.find(x => x.name == bitLengthVarName)!;
-                maxBits += Number(unsignedRangeWithBounds(lengthVar, lengthVar.name == operands[0].name ? instruction.bytecode.operands_range_check : undefined).maxValue) * 8;
+            let bitLengthVarSize = operand.loader_args?.bits_length_var_size as number;
+            let refLengthVarSize = operand.loader_args?.refs_length_var_size as number;
+            let refsRangeCheck = i == 0 && refLengthVarSize ? instruction.bytecode.operands_range_check : undefined;
+            let bitsRangeCheck = i == 0 && !refLengthVarSize ? instruction.bytecode.operands_range_check : undefined;
+            if (bitLengthVarSize) {
+                maxBits += Number(unsignedRangeWithBounds(bitLengthVarSize, bitsRangeCheck).maxValue) * 8;
             }
-            let refLengthVarName = operand.loader_args?.refs_length_var;
-            if (refLengthVarName) {
-                let lengthVar = operands.find(x => x.name == refLengthVarName)!;
-                maxRefs += Number(unsignedRangeWithBounds(lengthVar, lengthVar.name == operands[0].name ? instruction.bytecode.operands_range_check : undefined).maxValue);
+            if (refLengthVarSize) {
+                maxRefs += Number(unsignedRangeWithBounds(refLengthVarSize, refsRangeCheck).maxValue);
             }
             if (operand.loader_args!.completion_tag) {
                 maxBits -= 1;
@@ -80,13 +76,13 @@ function getInstructionOperandTypes(instruction: Instruction): Map<string, Opera
             result.set(operand.name, { type: 'cell', maxBits, maxRefs, minBits, minRefs });
         }
         else if (operand.loader == "int") {
-            result.set(operand.name, signedRange(operand));
+            result.set(operand.name, signedRange(operand.loader_args!.size as number));
         } else if (operand.loader == "uint") {
             // assuming operands_range_check used only for uints and matches its size
             if (i == 0) {
-                result.set(operand.name, unsignedRangeWithBounds(operand, instruction.bytecode.operands_range_check));
+                result.set(operand.name, unsignedRangeWithBounds(operand.loader_args!.size as number, instruction.bytecode.operands_range_check));
             } else {
-                result.set(operand.name, unsignedRange(operand));
+                result.set(operand.name, unsignedRange(operand.loader_args!.size as number));
             }
         } else if (operand.loader == "pushint_long") {
             result.set(operand.name, { type: 'integer', maxValue: (BigInt(1) << BigInt(258)) - BigInt(1), minValue: -(BigInt(1) << BigInt(258)) });
@@ -102,7 +98,7 @@ for (let insn of cp0.instructions) {
     instructions.set(insn.mnemonic, insn);
 }
 
-function addInstruction(continuation: Builder, instruction: Instruction, operands: Map<string, Cell | bigint>): Builder {
+function addInstruction(instruction: Instruction, operands: Map<string, Cell | bigint>): Builder {
     let prefixHex = instruction.bytecode.prefix.replace('_', '');
     let completionTag = instruction.bytecode.prefix.endsWith('_');
     let size = prefixHex.length * 4;
@@ -115,7 +111,8 @@ function addInstruction(continuation: Builder, instruction: Instruction, operand
         prefix >>= 1;
         size -= 1;
     }
-    let result = continuation.storeUint(prefix, size);
+    let result = beginCell();
+    result.storeUint(prefix, size);
     if (instruction.bytecode.operands) {
         let operandTypes = getInstructionOperandTypes(instruction);
         for (let operand of instruction.bytecode.operands) {
@@ -132,12 +129,50 @@ function addInstruction(continuation: Builder, instruction: Instruction, operand
                     throw Error('out of range');
                 }
                 if (operand.loader == 'int') {
-                    result = result.storeInt(operandValue, operand.loader_args!.size as number);
+                    result.storeInt(operandValue, operand.loader_args!.size as number);
                 } else if (operand.loader == 'uint') {
-                    result = result.storeUint(operandValue, operand.loader_args!.size as number);
+                    result.storeUint(operandValue, operand.loader_args!.size as number);
                 } else if (operand.loader == 'pushint_long') {
-                    let size = operandValue.toString(2).length / 8;
-                    result = result.storeUint(operandValue, )
+                    let bitSize = operandValue.toString(2).length;
+                    result.storeUint(Math.ceil((bitSize - 19) / 8), 5);
+                    result.storeUint(operandValue, bitSize);
+                }
+            } else {
+                if (!(operandValue instanceof Cell)) {
+                    throw Error('unknown type');
+                }
+                if (operandValue.bits.length > operandType.maxBits || operandValue.bits.length < operandType.minBits) {
+                    throw Error('bit length out of range');
+                }
+                if (operandValue.refs.length > operandType.maxRefs || operandValue.refs.length < operandType.minRefs) {
+                    throw Error('ref length out of range');
+                }
+                if (operand.loader == 'ref') {
+                    result.storeRef(operandValue);
+                } else if (operand.loader == 'subslice') {
+                    let refsVarSize = operand.loader_args!.refs_length_var_size as number ?? 0;
+                    let refsAdd = operand.loader_args!.refs_add as number ?? 0;
+                    if (refsVarSize > 0) {
+                        result.storeUint(operandValue.refs.length - refsAdd, refsVarSize);
+                    }
+                    let bitsVarSize = operand.loader_args!.bits_length_var_size as number ?? 0;
+                    let bitsAdd = operand.loader_args!.bits_padding as number ?? 0;
+                    if (bitsVarSize > 0) {
+                        if (!operand.loader_args!.completion_tag && (operandValue.bits.length - bitsAdd) % 8 != 0) {
+                            throw Error('completion tag is absent, operand slice length not divisible by 8');
+                        }
+                        result.storeUint(Math.ceil((operandValue.bits.length - bitsAdd) / 8), bitsVarSize);
+                    }
+                    result.storeSlice(operandValue.asSlice());
+                    if (operand.loader_args!.completion_tag) {
+                        result.storeBit(1);
+                        let paddingSize = Math.ceil((operandValue.bits.length - bitsAdd) / 8) * 8 + bitsAdd - operandValue.bits.length - 1;
+                        console.log(paddingSize);
+                        while (paddingSize) {
+                            result.storeBit(0);
+                            paddingSize--;
+                        }
+                    }
                 }
             }
         }
@@ -182,4 +217,5 @@ async function runCode(code: Cell, stack: TVMStack) {
     for (let instruction of cp0.instructions) {
         console.log(instruction.mnemonic, getInstructionOperandTypes(instruction))
     }
+    console.log(addInstruction(cp0.instructions.find(x => x.mnemonic == 'STSLICECONST')!, new Map([["s", beginCell().storeUint(0xffff, 16).endCell()]])).endCell().toString())
 })()

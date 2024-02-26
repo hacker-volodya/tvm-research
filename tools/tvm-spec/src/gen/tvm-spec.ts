@@ -42,17 +42,12 @@ export type InstructionPrefix = string;
 export type OperandVariableName = string;
 export type LoaderFunctionForOperand = "int" | "uint" | "ref" | "pushint_long" | "subslice";
 /**
- * If true, this operand is used as a subslice length variable, should be used only for serialization/deserialization, humans and implementations do not need them.
- */
-export type InternalFlag = boolean;
-/**
  * Describes how to parse operands. Order of objects in this array represents the actual order of operands in instruction. Optional, no operands in case of absence.
  */
 export type InstructionOperands = {
   name: OperandVariableName;
   loader: LoaderFunctionForOperand;
-  loader_args?: ArgumentsForLoaderFunctionOptionalNoArgumentsInCaseOfAbsence;
-  internal?: InternalFlag;
+  loader_args: ArgumentsForLoaderFunctionOptionalNoArgumentsInCaseOfAbsence;
 }[];
 /**
  * Free-form description of stack inputs and outputs. Usually the form is `[inputs] - [outputs]` where `[inputs]` are consumed stack values and `outputs` are produced stack values (top of stack is the last value).
@@ -202,31 +197,31 @@ export interface Instruction {
   mnemonic: InstructionName;
   doc: Documentation;
   bytecode: BytecodeFormat;
-  value_flow?: ValueFlowOfInstruction;
-  control_flow?: ControlFlowOfInstruction;
+  value_flow: ValueFlowOfInstruction;
+  control_flow: ControlFlowOfInstruction;
 }
 /**
  * Free-form human-friendly information which should be used for documentation purposes only.
  */
 export interface Documentation {
   category: CategoryOfInstruction;
-  description?: InstructionDescription;
-  gas?: GasUsageInfo;
-  fift?: FiftUsageDoc;
-  fift_examples?: {
-    fift?: FiftSnippet;
-    description?: ExampleDescription;
+  description: InstructionDescription;
+  gas: GasUsageInfo;
+  fift: FiftUsageDoc;
+  fift_examples: {
+    fift: FiftSnippet;
+    description: ExampleDescription;
   }[];
 }
 /**
  * Information related to bytecode format of an instruction. Assuming that each instruction has format `prefix || operand_1 || operand_2 || ...` (also some operands may be refs, not bitstring part).
  */
 export interface BytecodeFormat {
-  doc_opcode?: OpcodeFormatDocumentation;
+  doc_opcode: OpcodeFormatDocumentation;
   tlb: TLBSchema;
   prefix: InstructionPrefix;
   operands_range_check?: OperandsRangeCheck;
-  operands?: InstructionOperands;
+  operands: InstructionOperands;
 }
 /**
  * In TVM, it is possible for instructions to have overlapping prefixes, so to determine actual instruction it is required to read next `length` bits after prefix as uint `i` and check `from <= i <= to`. Optional, there is no operands check in case of absence.
@@ -243,15 +238,15 @@ export interface ArgumentsForLoaderFunctionOptionalNoArgumentsInCaseOfAbsence {
  * Information related to usage of stack and registers by instruction.
  */
 export interface ValueFlowOfInstruction {
-  doc_stack?: StackUsageDescription;
-  inputs?: InstructionInputs;
-  outputs?: InstructionOutputs;
+  doc_stack: StackUsageDescription;
+  inputs: InstructionInputs;
+  outputs: InstructionOutputs;
 }
 /**
  * Incoming values constraints. Input is unconstrained if absent.
  */
 export interface InstructionInputs {
-  stack: StackValues;
+  stack?: StackValues;
 }
 export interface MatchArm {
   value: ArmValue;
@@ -261,14 +256,14 @@ export interface MatchArm {
  * Outgoing values constraints. Output is unconstrained if absent.
  */
 export interface InstructionOutputs {
-  stack: StackValues;
+  stack?: StackValues;
 }
 /**
  * Information related to current cc modification by instruction
  */
 export interface ControlFlowOfInstruction {
-  branches?: PossibleBranchesOfAnInstruction;
-  nobranch?: NoBranchPossibility;
+  branches: PossibleBranchesOfAnInstruction;
+  nobranch: NoBranchPossibility;
 }
 /**
  * Values of saved control flow registers c0-c3
