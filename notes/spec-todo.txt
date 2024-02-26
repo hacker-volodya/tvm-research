@@ -1,0 +1,3 @@
+- operands: add internal/common flag, rename loader -> tlb?
+- add registers flow
+- add since version; investigate debug instructions and commented divs

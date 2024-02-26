@@ -42,12 +42,17 @@ export type InstructionPrefix = string;
 export type OperandVariableName = string;
 export type LoaderFunctionForOperand = "int" | "uint" | "ref" | "pushint_long" | "subslice";
 /**
+ * If true, this operand is used as a subslice length variable, should be used only for serialization/deserialization, humans and implementations do not need them.
+ */
+export type InternalFlag = boolean;
+/**
  * Describes how to parse operands. Order of objects in this array represents the actual order of operands in instruction. Optional, no operands in case of absence.
  */
 export type InstructionOperands = {
   name: OperandVariableName;
   loader: LoaderFunctionForOperand;
   loader_args?: ArgumentsForLoaderFunctionOptionalNoArgumentsInCaseOfAbsence;
+  internal?: InternalFlag;
 }[];
 /**
  * Free-form description of stack inputs and outputs. Usually the form is `[inputs] - [outputs]` where `[inputs]` are consumed stack values and `outputs` are produced stack values (top of stack is the last value).
@@ -59,36 +64,113 @@ export type StackUsageDescription = string;
 export type StackEntry =
   | {
       type: "simple";
-      name: string;
-      value_types?: ("Integer" | "Cell" | "Builder" | "Slice" | "Tuple" | "Continuation" | "Null")[];
+      name: VariableToPass;
+      value_types?: PossibleValueTypes;
     }
   | {
       type: "const";
-      value_type: "Integer" | "Null";
-      value: number | null;
+      value_type: ConstantType;
+      value: ConstantValue;
     }
   | {
       type: "conditional";
-      name: string;
-      match: {
-        value: number;
-        stack: StackValues;
-      }[];
+      name: VariableToMatch;
+      match: MatchArm[];
       else?: StackValues;
     }
   | {
       type: "array";
-      name: string;
-      length_var: string;
-      /**
-       * Array is a structure like `x1 y1 z1 x2 y2 z2 ... x_n y_n z_n n` which contains `n` entries of `x_i y_i z_i`. This property defines the structure of a single entry.
-       */
-      array_entry: StackValues;
+      name: VariableName;
+      length_var: VariableWhichContainsArrayLength;
+      array_entry: ArraySingleEntryDefinition;
     };
+export type VariableToPass = string;
+export type PossibleValueTypes = ("Integer" | "Cell" | "Builder" | "Slice" | "Tuple" | "Continuation" | "Null")[];
+export type ConstantType = "Integer" | "Null";
+export type ConstantValue = number | null;
+export type VariableToMatch = string;
+export type ArmValue = number;
+export type VariableName = string;
+export type VariableWhichContainsArrayLength = string;
+/**
+ * Array is a structure like `x1 y1 z1 x2 y2 z2 ... x_n y_n z_n n` which contains `n` entries of `x_i y_i z_i`. This property defines the structure of a single entry.
+ */
+export type ArraySingleEntryDefinition = StackValues;
 /**
  * Stack constraints. Top of stack is the last value.
  */
 export type StackValues = StackEntry[];
+/**
+ * Description of a continuation with static savelist
+ */
+export type Continuation =
+  | {
+      type: "cc";
+      save?: ContinuationSavelist;
+    }
+  | {
+      type: "variable";
+      var_name: ContinuationVariableName;
+      save?: ContinuationSavelist;
+    }
+  | {
+      type: "register";
+      index: RegisterNumber03;
+      save?: ContinuationSavelist;
+    }
+  | {
+      type: "special";
+      name: "until";
+      args: {
+        body: Continuation;
+        after: Continuation;
+      };
+    }
+  | {
+      type: "special";
+      name: "while";
+      args: {
+        cond: Continuation;
+        body: Continuation;
+        after: Continuation;
+      };
+    }
+  | {
+      type: "special";
+      name: "again";
+      args: {
+        body: Continuation;
+      };
+    }
+  | {
+      type: "special";
+      name: "repeat";
+      args: {
+        count: VariableName1;
+        body: Continuation;
+        after: Continuation;
+      };
+    }
+  | {
+      type: "special";
+      name: "pushint";
+      args: {
+        value: IntegerToPushToStack;
+        next: Continuation;
+      };
+    };
+export type ContinuationVariableName = string;
+export type RegisterNumber03 = number;
+export type VariableName1 = string;
+export type IntegerToPushToStack = number;
+/**
+ * Array of current continuation possible values after current instruction execution
+ */
+export type PossibleBranchesOfAnInstruction = Continuation[];
+/**
+ * Can this instruction not perform any of specified branches in certain cases (do not modify cc)?
+ */
+export type NoBranchPossibility = boolean;
 export type AliasName = string;
 export type MnemonicOfAliasedInstruction = string;
 /**
@@ -121,6 +203,7 @@ export interface Instruction {
   doc: Documentation;
   bytecode: BytecodeFormat;
   value_flow?: ValueFlowOfInstruction;
+  control_flow?: ControlFlowOfInstruction;
 }
 /**
  * Free-form human-friendly information which should be used for documentation purposes only.
@@ -170,11 +253,31 @@ export interface ValueFlowOfInstruction {
 export interface InstructionInputs {
   stack: StackValues;
 }
+export interface MatchArm {
+  value: ArmValue;
+  stack: StackValues;
+}
 /**
  * Outgoing values constraints. Output is unconstrained if absent.
  */
 export interface InstructionOutputs {
   stack: StackValues;
+}
+/**
+ * Information related to current cc modification by instruction
+ */
+export interface ControlFlowOfInstruction {
+  branches?: PossibleBranchesOfAnInstruction;
+  nobranch?: NoBranchPossibility;
+}
+/**
+ * Values of saved control flow registers c0-c3
+ */
+export interface ContinuationSavelist {
+  c0?: Continuation;
+  c1?: Continuation;
+  c2?: Continuation;
+  c3?: Continuation;
 }
 export interface Alias {
   mnemonic: AliasName;

@@ -1,0 +1,21 @@
+{
+  "name": "spec-verifier",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "npx tsc",
+    "start": "npx tsc && node dist/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@ton/ton": "^13.11.0",
+    "ton-contract-executor": "^0.8.4",
+    "tvm-spec": "file:../tvm-spec",
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.20"
+  }
+}

@@ -4,6 +4,8 @@
     10 QRSHIFTR#
 }>s 
 
+<b 0x82 8 u, 30 5 u, 0x3fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 256 u, 7 3 u, b> <s
+
 1000000 // gas limit
 
 0
