@@ -3,3 +3,6 @@
 - add since version; investigate debug instructions and commented divs
 - short docs, operands doc
 - add bytecode explainer: user can select instruction and play with operands or paste boc and get explanation of operands
+- type hints for operand cells (dictionary/continuation)
+- min/max values in operands
+- integrated asm.fif impl

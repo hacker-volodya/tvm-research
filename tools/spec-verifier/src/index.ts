@@ -176,11 +176,6 @@ function addInstruction(instruction: Instruction, operands: Map<string, Cell | b
                 }
             }
         }
-        // separate internal operands from common
-        // (opt) try to match range check with operands here, tell operandGetter about restrictions
-        // call operandPutter
-        // fill internal operands
-        // do range check
     }
     return result;
 }
