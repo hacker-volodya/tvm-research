@@ -210,7 +210,47 @@ async function runCode(code: Cell, stack: TVMStack) {
 
 (async () => {
     for (let instruction of cp0.instructions) {
-        console.log(instruction.mnemonic, getInstructionOperandTypes(instruction))
+        let operandTypes = getInstructionOperandTypes(instruction);
+        console.log(instruction.mnemonic, operandTypes);
+        for (let operand of instruction.bytecode.operands) {
+            let operandType = operandTypes.get(operand.name);
+            // @ts-ignore
+            operand.type = operand.loader;
+            if ((operand.loader == 'int' || operand.loader == 'uint') && operandType?.type == 'integer') {
+                // @ts-ignore
+                operand.size = operand.loader_args.size;
+                // @ts-ignore
+                operand.min_value = operandType.minValue.toString();
+                // @ts-ignore
+                operand.max_value = operandType.maxValue.toString();
+            } else if (operand.loader == 'subslice' && operandType?.type == 'cell') {
+                // @ts-ignore
+                operand.bits_length_var_size = operand.loader_args.bits_length_var_size;
+                // @ts-ignore
+                operand.refs_length_var_size = operand.loader_args.refs_length_var_size;
+                // @ts-ignore
+                operand.bits_padding = operand.loader_args.bits_padding;
+                // @ts-ignore
+                operand.refs_add = operand.loader_args.refs_add;
+                // @ts-ignore
+                operand.completion_tag = operand.loader_args.completion_tag;
+                // @ts-ignore
+                operand.max_bits = operandType.maxBits;
+                // @ts-ignore
+                operand.min_bits = operandType.minBits;
+                // @ts-ignore
+                operand.max_refs = operandType.maxRefs;
+                // @ts-ignore
+                operand.min_refs = operandType.minRefs;
+                // @ts-ignore
+                operand.decode_hint = { "type": "plain" };
+            }
+            // @ts-ignore
+            operand.loader_args = undefined;
+            // @ts-ignore
+            operand.loader = undefined;
+        }
     }
-    console.log(addInstruction(cp0.instructions.find(x => x.mnemonic == 'STSLICECONST')!, new Map([["s", beginCell().storeUint(0xffff, 16).endCell()]])).endCell().toString())
+    //console.log(JSON.stringify(cp0))
+    //console.log(addInstruction(cp0.instructions.find(x => x.mnemonic == 'STSLICECONST')!, new Map([["s", beginCell().storeUint(0xffff, 16).endCell()]])).endCell().toString())
 })()

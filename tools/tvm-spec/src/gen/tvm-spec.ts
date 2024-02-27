@@ -37,18 +37,98 @@ export type TLBSchema = string;
  */
 export type InstructionPrefix = string;
 /**
+ * Static instruction parameter serialized to bytecode.
+ */
+export type Operand =
+  | {
+      name: VariableName;
+      type: "uint";
+      size: IntegerSizeBits;
+      max_value: MaximumIntegerValue;
+      min_value: MinimumIntegerValue;
+    }
+  | {
+      name: VariableName;
+      type: "int";
+      size: IntegerSizeBits1;
+      max_value: MaximumIntegerValue1;
+      min_value: MinimumIntegerValue1;
+    }
+  | {
+      name: VariableName;
+      type: "pushint_long";
+    }
+  | {
+      name: VariableName;
+      type: "ref";
+      decode_hint: HintForDisassemblerToParseOperandData;
+    }
+  | {
+      name: VariableName;
+      type: "subslice";
+      bits_length_var_size: SizeOfBitLengthOperand;
+      bits_padding: ConstantIntegerValueToAddToLengthOfBitstringToLoad;
+      refs_length_var_size?: SizeOfRefCountOperand;
+      refs_add?: ConstantIntegerValueToAddToRefCount;
+      completion_tag: CompletionTagFlag;
+      max_bits: MaxBitSize;
+      min_bits: MinBitSize;
+      max_refs: MaxRefSize;
+      min_refs: MinRefSize;
+      decode_hint: HintForDisassemblerToParseOperandData;
+    };
+/**
  * Allowed chars are `a-zA-Z0-9_`, must not begin with digit or underscore and must not end with underscore.
  */
-export type OperandVariableName = string;
-export type LoaderFunctionForOperand = "int" | "uint" | "ref" | "pushint_long" | "subslice";
+export type VariableName = string;
+export type IntegerSizeBits = number;
+export type MaximumIntegerValue = number;
+export type MinimumIntegerValue = number;
+export type IntegerSizeBits1 = number;
+export type MaximumIntegerValue1 = number;
+export type MinimumIntegerValue1 = number;
+export type HintForDisassemblerToParseOperandData =
+  | {
+      type: "plain";
+    }
+  | {
+      type: "continuation";
+    }
+  | {
+      type: "dictionary";
+      size_var: VariableName;
+    };
+export type SizeOfBitLengthOperand = number;
+export type ConstantIntegerValueToAddToLengthOfBitstringToLoad = number;
 /**
- * Describes how to parse operands. Order of objects in this array represents the actual order of operands in instruction. Optional, no operands in case of absence.
+ * Optional, no refs in this operand in case of absence.
  */
-export type InstructionOperands = {
-  name: OperandVariableName;
-  loader: LoaderFunctionForOperand;
-  loader_args: ArgumentsForLoaderFunctionOptionalNoArgumentsInCaseOfAbsence;
-}[];
+export type SizeOfRefCountOperand = number;
+export type ConstantIntegerValueToAddToRefCount = number;
+/**
+ * Determines completion tag presense: trailing `'1' + '0' * x` in bitstring
+ */
+export type CompletionTagFlag = boolean;
+/**
+ * Hint for maximum bits available to store for this operand
+ */
+export type MaxBitSize = number;
+/**
+ * Hint for minimum bits available to store for this operand
+ */
+export type MinBitSize = number;
+/**
+ * Hint for maximum refs available to store for this operand
+ */
+export type MaxRefSize = number;
+/**
+ * Hint for minimum refs available to store for this operand
+ */
+export type MinRefSize = number;
+/**
+ * Describes how to parse operands. Order of objects in this array represents the actual order of operands in instruction.
+ */
+export type InstructionOperands = Operand[];
 /**
  * Free-form description of stack inputs and outputs. Usually the form is `[inputs] - [outputs]` where `[inputs]` are consumed stack values and `outputs` are produced stack values (top of stack is the last value).
  */
@@ -59,7 +139,7 @@ export type StackUsageDescription = string;
 export type StackEntry =
   | {
       type: "simple";
-      name: VariableToPass;
+      name: VariableName;
       value_types?: PossibleValueTypes;
     }
   | {
@@ -69,24 +149,28 @@ export type StackEntry =
     }
   | {
       type: "conditional";
-      name: VariableToMatch;
+      name: VariableName1;
       match: MatchArm[];
       else?: StackValues;
     }
   | {
       type: "array";
       name: VariableName;
-      length_var: VariableWhichContainsArrayLength;
+      length_var: VariableName2;
       array_entry: ArraySingleEntryDefinition;
     };
-export type VariableToPass = string;
 export type PossibleValueTypes = ("Integer" | "Cell" | "Builder" | "Slice" | "Tuple" | "Continuation" | "Null")[];
 export type ConstantType = "Integer" | "Null";
 export type ConstantValue = number | null;
-export type VariableToMatch = string;
+/**
+ * Allowed chars are `a-zA-Z0-9_`, must not begin with digit or underscore and must not end with underscore.
+ */
+export type VariableName1 = string;
 export type ArmValue = number;
-export type VariableName = string;
-export type VariableWhichContainsArrayLength = string;
+/**
+ * Allowed chars are `a-zA-Z0-9_`, must not begin with digit or underscore and must not end with underscore.
+ */
+export type VariableName2 = string;
 /**
  * Array is a structure like `x1 y1 z1 x2 y2 z2 ... x_n y_n z_n n` which contains `n` entries of `x_i y_i z_i`. This property defines the structure of a single entry.
  */
@@ -105,7 +189,7 @@ export type Continuation =
     }
   | {
       type: "variable";
-      var_name: ContinuationVariableName;
+      var_name: VariableName3;
       save?: ContinuationSavelist;
     }
   | {
@@ -141,7 +225,7 @@ export type Continuation =
       type: "special";
       name: "repeat";
       args: {
-        count: VariableName1;
+        count: VariableName4;
         body: Continuation;
         after: Continuation;
       };
@@ -154,9 +238,15 @@ export type Continuation =
         next: Continuation;
       };
     };
-export type ContinuationVariableName = string;
+/**
+ * Allowed chars are `a-zA-Z0-9_`, must not begin with digit or underscore and must not end with underscore.
+ */
+export type VariableName3 = string;
 export type RegisterNumber03 = number;
-export type VariableName1 = string;
+/**
+ * Allowed chars are `a-zA-Z0-9_`, must not begin with digit or underscore and must not end with underscore.
+ */
+export type VariableName4 = string;
 export type IntegerToPushToStack = number;
 /**
  * Array of current continuation possible values after current instruction execution
@@ -231,9 +321,6 @@ export interface OperandsRangeCheck {
   from: number;
   to: number;
 }
-export interface ArgumentsForLoaderFunctionOptionalNoArgumentsInCaseOfAbsence {
-  [k: string]: unknown;
-}
 /**
  * Information related to usage of stack and registers by instruction.
  */
@@ -243,7 +330,7 @@ export interface ValueFlowOfInstruction {
   outputs: InstructionOutputs;
 }
 /**
- * Incoming values constraints. Input is unconstrained if absent.
+ * Incoming values constraints.
  */
 export interface InstructionInputs {
   stack?: StackValues;
@@ -253,7 +340,7 @@ export interface MatchArm {
   stack: StackValues;
 }
 /**
- * Outgoing values constraints. Output is unconstrained if absent.
+ * Outgoing values constraints.
  */
 export interface InstructionOutputs {
   stack?: StackValues;
