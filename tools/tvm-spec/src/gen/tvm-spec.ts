@@ -9,6 +9,10 @@
  * How instruction is named in [original TVM implementation](https://github.com/ton-blockchain/ton/blob/master/crypto/vm). Not necessarily unique (currently only DEBUG is not unique).
  */
 export type InstructionName = string;
+/**
+ * Global version (ConfigParam 8) which enables this instruction. Version 9999 means that instruction has no global version and currently unavailable in mainnet.
+ */
+export type SinceGlobalVersion = number;
 export type CategoryOfInstruction = string;
 /**
  * Free-form markdown description of instruction.
@@ -180,6 +184,23 @@ export type ArraySingleEntryDefinition = StackValues;
  */
 export type StackValues = StackEntry[];
 /**
+ * Represents read/write access to a register
+ */
+export type Register =
+  | {
+      type: "constant";
+      index: number;
+    }
+  | {
+      type: "variable";
+      var_name: VariableName;
+    }
+  | {
+      type: "special";
+      name: "gas" | "cstate";
+    };
+export type RegisterValues = Register[];
+/**
  * Description of a continuation with static savelist
  */
 export type Continuation =
@@ -285,6 +306,7 @@ export interface Schema {
 }
 export interface Instruction {
   mnemonic: InstructionName;
+  since_version: SinceGlobalVersion;
   doc: Documentation;
   bytecode: BytecodeFormat;
   value_flow: ValueFlowOfInstruction;
@@ -334,6 +356,7 @@ export interface ValueFlowOfInstruction {
  */
 export interface InstructionInputs {
   stack?: StackValues;
+  registers: RegisterValues;
 }
 export interface MatchArm {
   value: ArmValue;
@@ -344,6 +367,7 @@ export interface MatchArm {
  */
 export interface InstructionOutputs {
   stack?: StackValues;
+  registers: RegisterValues;
 }
 /**
  * Information related to current cc modification by instruction
