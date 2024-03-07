@@ -9,5 +9,7 @@
         "esModuleInterop": true,
         "resolveJsonModule": true,
         "moduleResolution": "node"
-    }
+    },
+    "include": ["src/**/*", "node_modules/jest-expect-message/types/index.d.ts"],
+    "exclude": ["src/**/*.test.ts"]
 }
