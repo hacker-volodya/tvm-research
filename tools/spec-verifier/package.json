@@ -5,17 +5,21 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "npx tsc",
-    "start": "npx tsc && node dist/index.js"
+    "start": "npx tsc && node dist/index.js",
+    "test": "jest"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@ton/sandbox": "^0.16.0",
     "@ton/ton": "^13.11.0",
     "ton-contract-executor": "^0.8.4",
     "tvm-spec": "file:../tvm-spec",
     "typescript": "^5.3.3"
   },
   "devDependencies": {
-    "@types/node": "^20.11.20"
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.20",
+    "ts-jest": "^29.1.2"
   }
 }

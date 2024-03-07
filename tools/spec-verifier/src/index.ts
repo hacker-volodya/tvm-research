@@ -5,7 +5,8 @@ import {
     cp0,
 } from "tvm-spec";
 import { TVMStack, TVMStackEntry, runTVM } from "ton-contract-executor";
-import { Builder, Cell, beginCell } from "@ton/ton";
+import { Address, Builder, Cell, TupleItem, beginCell } from "@ton/ton";
+import { Executor, defaultConfig } from "@ton/sandbox";
 
 const instructions = new Map();
 for (let insn of cp0.instructions) {
@@ -33,7 +34,7 @@ function addInstruction(
     if (instruction.bytecode.operands) {
         for (let operand of instruction.bytecode.operands) {
             let operandValue = operands.get(operand.name);
-            if (!operandValue) {
+            if (operandValue == undefined) {
                 throw new Error("missing operand");
             }
             if (operand.type == "int" || operand.type == "uint") {
@@ -56,7 +57,7 @@ function addInstruction(
                     throw Error("unknown type");
                 }
                 let bitSize = operandValue.toString(2).length;
-                let arg = Math.ceil((bitSize - 19) / 8);
+                let arg = Math.max(Math.ceil((bitSize - 19) / 8), 0);
                 if (arg > 30) {
                     throw new Error("out of range");
                 }
@@ -110,7 +111,7 @@ function addInstruction(
                             bitsAdd -
                             operandValue.bits.length -
                             1;
-                        while (paddingSize) {
+                        while (paddingSize > 0) {
                             result.storeBit(0);
                             paddingSize--;
                         }
@@ -122,43 +123,53 @@ function addInstruction(
     return result;
 }
 
-async function runCode(code: Cell, stack: TVMStack) {
-    return await runTVM({
-        debug: true,
-        function_selector: 1337,
-        init_stack: stack,
-        code: code.toBoc({ idx: false }).toString("base64"),
-        data: beginCell().endCell().toBoc({ idx: false }).toString("base64"),
-        c7_register: {
-            type: "tuple",
-            value: [],
-        },
-        gas_limit: -1,
-        gas_max: -1,
-        gas_credit: -1,
+async function runCode(code: Cell, stack: TupleItem[]) {
+    let executor = await Executor.create();
+    return await executor.runGetMethod({
+        code: beginCell()
+            .storeUint(0x30, 8)  // drop method_id
+            .storeSlice(code.asSlice()) // actual code
+            .endCell(),
+        data: beginCell().endCell(),
+        methodId: 1337,
+        stack: stack,
+        config: defaultConfig,
+        verbosity: "full_location_stack_verbose",
+        address: Address.parseRaw("0:0000000000000000000000000000000000000000000000000000000000000000"),
+        unixTime: 10000,
+        balance: 1000n,
+        randomSeed: Buffer.from('0000000000000000000000000000000000000000000000000000000000000000', 'hex'),
+        gasLimit: 1000n,
+        debugEnabled: true
     });
 }
 
-// (async () => {
-//     let result = await runCode(beginCell().storeUint(0xa4, 8).endCell(), [
-//         {
-//             type: 'int',
-//             value: '1'
-//         }
-//     ]);
-//     console.log(Buffer.from(result.logs ?? "", 'base64').toString('ascii'));
-//     console.log(result);
-// })()
-
 (async () => {
+    let data: any = {};
     for (let instruction of cp0.instructions) {
-        if (!instruction.value_flow.inputs.registers) {
-            instruction.value_flow.inputs.registers = [];
-        }
-        if (!instruction.value_flow.outputs.registers) {
-            instruction.value_flow.outputs.registers = [];
-        }
+        let operands = new Map<string, Cell | bigint>(instruction.bytecode.operands.map(op => {
+            if (op.type == "int" || op.type == "uint") {
+                return [op.name, BigInt(op.min_value)];
+            } else if (op.type == "pushint_long") {
+                return [op.name, BigInt(0)];
+            } else if (op.type == "ref") {
+                return [op.name, beginCell().endCell()];
+            } else if (op.type == "subslice") {
+                let builder = op.completion_tag ? beginCell().storeUint(0, op.min_bits || 1) : beginCell().storeUint(0, 8);
+                for (let i = 0; i < op.min_refs; i++) {
+                    builder.storeRef(beginCell());
+                }
+                return [op.name, builder.endCell()];
+            } else {
+                throw new Error("wtf");
+            }
+        }));
+        console.log(instruction.mnemonic, operands);
+        let builder = addInstruction(instruction, operands);
+        let result = await runCode(beginCell().storeBuilder(builder).endCell(), []);
+        console.log(result);
+        data[instruction.mnemonic] = result;
     }
-    console.log(JSON.stringify(cp0));
-    //console.log(addInstruction(cp0.instructions.find(x => x.mnemonic == 'STSLICECONST')!, new Map([["s", beginCell().storeUint(0xffff, 16).endCell()]])).endCell().toString())
+    console.log("------------------")
+    console.log(JSON.stringify(data));
 })();
