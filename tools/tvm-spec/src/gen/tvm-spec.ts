@@ -13,6 +13,14 @@ export type InstructionName = string;
  * Global version (ConfigParam 8) which enables this instruction. Version 9999 means that instruction has no global version and currently unavailable in mainnet.
  */
 export type SinceGlobalVersion = number;
+/**
+ * Free-form bytecode format description.
+ */
+export type OpcodeFormatDocumentation = string;
+/**
+ * Free-form description of stack inputs and outputs. Usually the form is `[inputs] - [outputs]` where `[inputs]` are consumed stack values and `outputs` are produced stack values (top of stack is the last value).
+ */
+export type StackUsageDescription = string;
 export type CategoryOfInstruction = string;
 /**
  * Free-form markdown description of instruction.
@@ -31,7 +39,7 @@ export type ExampleDescription = string;
 /**
  * Free-form bytecode format description.
  */
-export type OpcodeFormatDocumentation = string;
+export type OpcodeFormatDocumentation1 = string;
 /**
  * TL-b bytecode format description.
  */
@@ -47,6 +55,7 @@ export type Operand =
   | {
       name: VariableName;
       type: "uint";
+      display_hints: DisplayHints;
       size: IntegerSizeBits;
       max_value: MaximumIntegerValue;
       min_value: MinimumIntegerValue;
@@ -54,6 +63,7 @@ export type Operand =
   | {
       name: VariableName;
       type: "int";
+      display_hints: DisplayHints;
       size: IntegerSizeBits1;
       max_value: MaximumIntegerValue1;
       min_value: MinimumIntegerValue1;
@@ -65,11 +75,12 @@ export type Operand =
   | {
       name: VariableName;
       type: "ref";
-      decode_hint: HintForDisassemblerToParseOperandData;
+      display_hints: DisplayHints;
     }
   | {
       name: VariableName;
       type: "subslice";
+      display_hints: DisplayHints;
       bits_length_var_size: SizeOfBitLengthOperand;
       bits_padding: ConstantIntegerValueToAddToLengthOfBitstringToLoad;
       refs_length_var_size?: SizeOfRefCountOperand;
@@ -79,29 +90,51 @@ export type Operand =
       min_bits: MinBitSize;
       max_refs: MaxRefSize;
       min_refs: MinRefSize;
-      decode_hint: HintForDisassemblerToParseOperandData;
     };
 /**
  * Allowed chars are `a-zA-Z0-9_`, must not begin with digit or underscore and must not end with underscore.
  */
 export type VariableName = string;
-export type IntegerSizeBits = number;
-export type MaximumIntegerValue = number;
-export type MinimumIntegerValue = number;
-export type IntegerSizeBits1 = number;
-export type MaximumIntegerValue1 = number;
-export type MinimumIntegerValue1 = number;
-export type HintForDisassemblerToParseOperandData =
-  | {
-      type: "plain";
-    }
+/**
+ * Hint for converting operands between raw values and Asm.fif display format
+ */
+export type DisplayHint =
   | {
       type: "continuation";
     }
   | {
       type: "dictionary";
       size_var: VariableName;
+    }
+  | {
+      type: "add";
+      value: number;
+    }
+  | {
+      type: "stack";
+    }
+  | {
+      type: "register";
+    }
+  | {
+      type: "pushint4";
+    }
+  | {
+      type: "optional_nargs";
+    }
+  | {
+      type: "plduz";
     };
+/**
+ * Set of hints to convert between Asm.fif representation and raw bytecode
+ */
+export type DisplayHints = DisplayHint[];
+export type IntegerSizeBits = number;
+export type MaximumIntegerValue = number;
+export type MinimumIntegerValue = number;
+export type IntegerSizeBits1 = number;
+export type MaximumIntegerValue1 = number;
+export type MinimumIntegerValue1 = number;
 export type SizeOfBitLengthOperand = number;
 export type ConstantIntegerValueToAddToLengthOfBitstringToLoad = number;
 /**
@@ -136,7 +169,7 @@ export type InstructionOperands = Operand[];
 /**
  * Free-form description of stack inputs and outputs. Usually the form is `[inputs] - [outputs]` where `[inputs]` are consumed stack values and `outputs` are produced stack values (top of stack is the last value).
  */
-export type StackUsageDescription = string;
+export type StackUsageDescription1 = string;
 /**
  * Representation of stack entry or group of stack entries
  */
@@ -286,7 +319,7 @@ export type FiftUsageDoc1 = string;
 /**
  * Free-form description of stack inputs and outputs. Usually the form is `[inputs] - [outputs]` where `[inputs]` are consumed stack values and `outputs` are produced stack values (top of stack is the last value).
  */
-export type StackUsageDescription1 = string;
+export type StackUsageDescription2 = string;
 /**
  * Free-form markdown description of alias.
  */
@@ -316,6 +349,8 @@ export interface Instruction {
  * Free-form human-friendly information which should be used for documentation purposes only.
  */
 export interface Documentation {
+  opcode?: OpcodeFormatDocumentation;
+  stack?: StackUsageDescription;
   category: CategoryOfInstruction;
   description: InstructionDescription;
   gas: GasUsageInfo;
@@ -329,7 +364,7 @@ export interface Documentation {
  * Information related to bytecode format of an instruction. Assuming that each instruction has format `prefix || operand_1 || operand_2 || ...` (also some operands may be refs, not bitstring part).
  */
 export interface BytecodeFormat {
-  doc_opcode: OpcodeFormatDocumentation;
+  doc_opcode: OpcodeFormatDocumentation1;
   tlb: TLBSchema;
   prefix: InstructionPrefix;
   operands_range_check?: OperandsRangeCheck;
@@ -347,7 +382,7 @@ export interface OperandsRangeCheck {
  * Information related to usage of stack and registers by instruction.
  */
 export interface ValueFlowOfInstruction {
-  doc_stack: StackUsageDescription;
+  doc_stack: StackUsageDescription1;
   inputs: InstructionInputs;
   outputs: InstructionOutputs;
 }
@@ -389,7 +424,7 @@ export interface Alias {
   mnemonic: AliasName;
   alias_of: MnemonicOfAliasedInstruction;
   doc_fift?: FiftUsageDoc1;
-  doc_stack?: StackUsageDescription1;
+  doc_stack?: StackUsageDescription2;
   description?: AliasDescription;
   operands: FixedOperandsOfAlias;
 }

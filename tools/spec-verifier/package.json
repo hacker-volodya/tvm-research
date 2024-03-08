@@ -13,13 +13,13 @@
   "dependencies": {
     "@ton/sandbox": "^0.16.0",
     "@ton/ton": "^13.11.0",
-    "jest-expect-message": "^1.1.3",
     "tvm-spec": "file:../tvm-spec",
     "typescript": "^5.3.3"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.20",
+    "jest-expect-message": "^1.1.3",
     "ts-jest": "^29.1.2"
   }
 }
